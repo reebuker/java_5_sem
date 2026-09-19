@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.Arrays;
 
 public class Main {
     public static int[] getArray(Scanner scanner, int number, int size) {
@@ -18,8 +19,8 @@ public class Main {
     }
 
     public static int findMaxId(int[] arr) {
-        if (arr == Null || arr.length == 0) {
-            System.out.println("Пустой/не инициализированный массив передан в findMaxid");
+        if (arr == null || arr.length == 0) {
+            System.out.println("Пустой массив передан в findMaxid");
             return -1;
         }
         int id = 0;
@@ -31,12 +32,38 @@ public class Main {
         return id;
     }
 
-    public static int swapFirstToMax(int[] arr) {
+    public static void swapFirstToMax(int[] arr, int id) {
+        if (arr == null || arr.length == 0) {
+            System.out.println("Пустой массив передан в swapFirstToMax");
+            return;
+        }
+        if (id >= arr.length) {
+            System.out.println("Некорректный id");
+            return;
+        }
+        int temp = arr[id];
+        arr[id] = arr[0];
+        arr[0] = temp;
+    }
 
+    public static void handleTask(Scanner scanner, int number, int size) {
+        int[] arr = getArray(scanner, number, size);
+
+        System.out.println("Получен массив #%d:".formatted(number));
+        System.out.println(Arrays.toString(arr));
+
+        int id = findMaxId(arr);
+        System.out.println("Индекс макс. элемента: " + id);
+
+        swapFirstToMax(arr, id);
+        System.out.println("Массив #%d после свапа первого и макс. элемента: ".formatted(number));
+        System.out.println(Arrays.toString(arr));
     }
 
     public static void main() {
         Scanner scanner = new Scanner(System.in);
-        
+        handleTask(scanner, 1, 6);
+        handleTask(scanner, 2, 3);
+        handleTask(scanner, 3, 4);
     }
 }

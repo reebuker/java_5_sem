@@ -16,6 +16,25 @@ public class Main {
 
         return arr;
     }
+
+    public static int findMaxId(int[] arr) {
+        if (arr == Null || arr.length == 0) {
+            System.out.println("Пустой/не инициализированный массив передан в findMaxid");
+            return -1;
+        }
+        int id = 0;
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] > arr[id]) {
+                id = i;
+            }
+        }
+        return id;
+    }
+
+    public static int swapFirstToMax(int[] arr) {
+
+    }
+
     public static void main() {
         Scanner scanner = new Scanner(System.in);
         

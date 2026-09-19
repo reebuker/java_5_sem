@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class Main {
     public static int[] getArray(Scanner scanner, int number, int size) {
@@ -37,7 +38,7 @@ public class Main {
             System.out.println("Пустой массив передан в swapFirstToMax");
             return;
         }
-        if (id >= arr.length) {
+        if (id >= arr.length || id < 0) {
             System.out.println("Некорректный id");
             return;
         }
@@ -60,7 +61,7 @@ public class Main {
         System.out.println(Arrays.toString(arr));
     }
 
-    public static void main() {
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         handleTask(scanner, 1, 6);
         handleTask(scanner, 2, 3);

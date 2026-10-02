@@ -93,7 +93,7 @@ public class Menu {
 
         System.out.println("-------------------------------------------------------");
         for (int i = 0; i < groupNames.size(); i++) {
-            System.out.printf("| %-3d| %-49s|%n", (i + 1), groupNames.get(i));
+            System.out.printf("| %-3d| %-47s|%n", (i + 1), groupNames.get(i));
         }
         System.out.printf("| %-3d| %-47s|%n", (groupNames.size() + 1), "Создать новую группу");
 
@@ -103,13 +103,14 @@ public class Menu {
 
         String targetGroup;
         if (choice == groupNames.size() + 1) {
-            System.out.print("Введите название новой группы: ");
+            System.out.println("-------------------------------------------------------");
+            System.out.print("| Введите название новой группы: ");
             targetGroup = scanner.nextLine();
+            groupNames.add(targetGroup);
         } else {
             targetGroup = groupNames.get(choice - 1);
         }
 
-        groupNames.add(targetGroup);
         pool.get(id).setGroup(targetGroup);
     }
 
@@ -251,5 +252,4 @@ public class Menu {
             }
         }
     }
-
 }

@@ -1,103 +1,239 @@
 import java.util.Scanner;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class Menu {
-    private int exitOption = 8;
     private Scanner scanner;
-    private ArrayList<Remote> items;
 
+    private List<String>                groupNames;
+    private Map<Integer, Remote>        pool;
 
     Menu(Scanner scanner) {
         this.scanner = scanner;
-        items = new ArrayList<Remote>();
+        groupNames = new ArrayList<>();
+        pool = new LinkedHashMap<>();
     }
-
+        
     // Control methods
-    private void newObject() {
+    private Remote editObject() {
         printHead();
         System.out.print("| Введите производителя (enter для пропуска): ");
-        String manufacturer = scanner.nextLine();
+        String manufacturerLine = scanner.nextLine();
 
         printHead();
         System.out.print("| Введите кол-во кнопок (enter для пропуска): ");
-        int buttons = 0;
         String buttonsLine = scanner.nextLine();
-        if (!buttonsLine.isBlank()) {
-            buttons = Integer.parseInt(buttonsLine);
-        }
 
         printHead();
         System.out.print("| Введите цену (enter для пропуска): ");
-        double price = 0;
         String priceLine = scanner.nextLine();
+
+        if (manufacturerLine.isBlank() && priceLine.isBlank() && buttonsLine.isBlank()) {
+            return new Remote();
+        }
+
+        String manufacturer = "Unknown";
+        int buttons = 0;
+        double price = 0;
+
+        if (!manufacturerLine.isBlank()) {
+            manufacturer = manufacturerLine;
+        }
+        if (!buttonsLine.isBlank()) {
+            buttons = Integer.parseInt(buttonsLine);
+        }
         if (!priceLine.isBlank()) {
             price = Double.parseDouble(priceLine);
         }
 
-        Remote remote = new Remote(manufacturer, buttons, price);
-        items.add(remote);
+        return new Remote(manufacturer, buttons, price);
     }
-    /*
-    case 1 -> newObject();
-    case 2 -> joinToArray();
-    case 3 -> printObject();
-    case 4 -> changeObject();
-    case 5 -> addToArray();
-    case 6 -> removeFromArray();
-    case 7 -> calculateVar();
-    */
 
-    
+    private void listObjects() {
+        printHead();
+        if (pool.isEmpty()) {
+            System.out.println("| В базе данных нет ни одного объекта                 |");
+            System.out.println("-------------------------------------------------------");
+            System.out.print("Нажмите Enter, чтобы вернуться в меню...");
+            scanner.nextLine();
+            return;
+        }
+        System.out.printf("| %-3s| %-15s| %-7s| %-7s| %-12s|%n", "ID", "Произв.", "Кнопки", "Цена", "Группа");
+        System.out.println("-------------------------------------------------------");
+
+        for (Map.Entry<Integer, Remote> entry : pool.entrySet()) {
+            Remote item = entry.getValue();
+            System.out.printf("| %-3d| %-15s| %-7d| %-7.2f| %-12s|%n",
+                item.getId(), item.getManufacturer(), item.getButtons(), item.getPrice(), item.getGroup());
+        }
+    }
+
+    // Main methods
+    private void newObject() {
+        Remote remote = editObject();
+        pool.put(remote.getId(), remote);
+    }
+
+    private void addToArray() {
+        listObjects();
+        if (pool.isEmpty()) { return; }
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("| Введите ID объекта: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        if (!pool.containsKey(id)) {
+            System.out.println("| Объекта с таким ID не существует.");
+            return;
+        }
+
+        System.out.println("-------------------------------------------------------");
+        for (int i = 0; i < groupNames.size(); i++) {
+            System.out.printf("| %-3d| %-49s|%n", (i + 1), groupNames.get(i));
+        }
+        System.out.printf("| %-3d| %-47s|%n", (groupNames.size() + 1), "Создать новую группу");
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("| Выберите группу: ");
+        int choice = Integer.parseInt(scanner.nextLine());
+
+        String targetGroup;
+        if (choice == groupNames.size() + 1) {
+            System.out.print("Введите название новой группы: ");
+            targetGroup = scanner.nextLine();
+        } else {
+            targetGroup = groupNames.get(choice - 1);
+        }
+
+        groupNames.add(targetGroup);
+        pool.get(id).setGroup(targetGroup);
+    }
+
+    private void printObject() {
+        listObjects();
+        if (pool.isEmpty()) { return; }
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("Нажмите Enter, чтобы вернуться в меню...");
+        scanner.nextLine();
+    }
+
+    private void changeObject() {
+        listObjects();
+        if (pool.isEmpty()) { return; }
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("| Введите ID объекта: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        if (!pool.containsKey(id)) {
+            System.out.println("| Объекта с таким ID не существует.");
+            return;
+        }
+
+        Remote remote = editObject();
+        pool.get(id).setPrice(remote.getPrice());
+        pool.get(id).setManufacturer(remote.getManufacturer());
+        pool.get(id).setButtons(remote.getButtons());
+    }
+
+    private void removeObject() {
+        listObjects();
+        if (pool.isEmpty()) { return; }
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("| Введите ID объекта: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        if (!pool.containsKey(id)) {
+            System.out.println("| Объекта с таким ID не существует.");
+            return;
+        }
+        
+        System.out.println("-------------------------------------------------------");
+        if (pool.get(id).getGroup() != Remote.defaultGroup) {
+            System.out.printf("| %-3d| %-47s|%n", 1, "Удалить из группы " + pool.get(id).getGroup());
+            System.out.printf("| %-3d| %-47s|%n", 2, "Удалить из базы данных");
+            System.out.println("-------------------------------------------------------");
+            System.out.print("| Выберите действие: ");
+            int choice = Integer.parseInt(scanner.nextLine());
+            System.out.println("-------------------------------------------------------");
+
+        
+            if (choice == 1) {
+                System.out.printf("| Объект удален из группы %-28s|%n", pool.get(id).getGroup());
+                pool.get(id).setGroup(Remote.defaultGroup);
+            }
+            else if (choice == 2) {
+                pool.remove(id);
+                System.out.println("| Объект удален из базы данных                        |");
+            }
+        }
+        else {
+            pool.remove(id);
+            System.out.println("| Объект удален из базы данных                        |");
+        }
+
+        System.out.println("-------------------------------------------------------");
+        System.out.print("Нажмите Enter, чтобы вернуться в меню...");
+        scanner.nextLine();
+    }
+
+    private void calculateVar() {
+        printHead();
+        if (pool.isEmpty()) {
+            System.out.println("| В базе данных нет ни одного объекта                 |");
+        }
+        else {
+            int sum = 0;
+            for (Remote item : pool.values()) {
+                sum += item.getButtons();
+            }
+            System.out.printf("| Среднее кол-во кнопок: %-29.2f|%n", (double) sum / pool.size());
+        }
+        System.out.println("-------------------------------------------------------");
+        System.out.print("Нажмите Enter, чтобы вернуться в меню...");
+        scanner.nextLine();
+    }
 
     // Terminal methods
     private void printHead() {
-        // System.out.print("\033[H\033[2J");
-        // System.out.flush();
-        System.out.println("-----------------------------------------------");
-        System.out.println("| Лабораторная работа 2: пульты от телевизора |");
-        System.out.println("-----------------------------------------------");
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+        System.out.println("-------------------------------------------------------");
+        System.out.println("|     Лабораторная работа 2: пульты от телевизора     |");
+        System.out.println("-------------------------------------------------------");
     }
     private void printTail() {
-        System.out.println("-----------------------------------------------");
+        System.out.println("-------------------------------------------------------");
     }
 
     private void printOptionsMain() {
         printHead();
-        System.out.println("| Выберите опцию: (1-8)                       |");
-        System.out.println("| 1. Создать новый объект                     |");
-        System.out.println("| 2. Объеденить объекты в массив              |");
-        System.out.println("| 3. Отобразить свойства объекта              |");
-        System.out.println("| 4. Изменить свойства объекта                |");
-        System.out.println("| 5. Добавить объекты в массив                |");
-        System.out.println("| 6. Удалить объекты из массива               |");
-        System.out.println("| 7. Вычислить заданный параметр              |");
-        System.out.println("| 8. Выход из программы                       |");
+        System.out.println("| Выберите опцию: (1-7)                               |");
+        System.out.println("| 1. Создать новый объект                             |");
+        System.out.println("| 2. Добавить объекты в массив                        |");
+        System.out.println("| 3. Отобразить свойства объекта                      |");
+        System.out.println("| 4. Изменить свойства объекта                        |");
+        System.out.println("| 5. Удалить объекты из массива                       |");
+        System.out.println("| 6. Вычислить заданный параметр                      |");
+        System.out.println("| 7. Выход из программы                               |");
         printTail();
     }
 
-    private int getValidInput(int end) {
-        int input = 0;
-        while (input < 1 || input > end) {
-            if (scanner.hasNextInt()) {
-                input = scanner.nextInt();
-            }
-            else {
-                scanner.nextLine();
-            }
-        }
-        return input;
-    }
-
     public void start() {
-        int option;
         while (true) {
-            //option = getValidInput(8);
 
             int option = 0;
-            while (option < 1 || option > 8) {
-                printOptionMain();
+            while (option < 1 || option > 7) {
+                printOptionsMain();
                 if (scanner.hasNextInt()) {
                     option = scanner.nextInt();
+                    scanner.nextLine();
                 }
                 else {
                     scanner.nextLine();
@@ -106,13 +242,12 @@ public class Menu {
 
             switch (option) {
                 case 1 -> newObject();
-                case 2 -> joinToArray();
+                case 2 -> addToArray();
                 case 3 -> printObject();
                 case 4 -> changeObject();
-                case 5 -> addToArray();
-                case 6 -> removeFromArray();
-                case 7 -> calculateVar();
-                case 8 -> return;
+                case 5 -> removeObject();
+                case 6 -> calculateVar();
+                case 7 -> { return; }
             }
         }
     }

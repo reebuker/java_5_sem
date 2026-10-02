@@ -1,50 +1,61 @@
 public class Remote {
     // Data
-    private static  int nextId  = 0;
-    private final   int id;
+    private static  int     nextId          = 0;
+    private final   int     id;
+    public  static  String  defaultGroup    = "No group";
 
+    private String  group           = defaultGroup;
     private String  manufacturer    = "Unknown";
     private int     numberOfButtons = 1;
-    private int     price           = 0;
+    private double  price           = 0;
 
     // Constructors
     Remote() {
         this.id = nextId++;
     }
 
-    Remote(String manufacturer, int numberOfButtons, int price) {
+    Remote(String manufacturer, int numberOfButtons, double price) {
         this();
         this.manufacturer = manufacturer;
         this.numberOfButtons = numberOfButtons;
         this.price = price;
     }
 
-    // Functions
+    // Getters
     public int getId() {
         return this.id;
+    }
+
+    public String getGroup() {
+        return this.group;
     }
 
     public String getManufacturer() {
         return this.manufacturer;
     }
 
-    public int getNumberOfButtons() {
+    public int getButtons() {
         return this.numberOfButtons;
     }
 
-    public int getPrice() {
+    public double getPrice() {
         return this.price;
+    }
+
+    // Setters
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public void setManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
     }
 
-    public void setNumberOfButtons(int number) {
+    public void setButtons(int number) {
         this.numberOfButtons = number;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 

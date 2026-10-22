@@ -44,9 +44,22 @@ abstract class Remote {
     public abstract void changeVolume(int delta);
     public abstract void changeChannel(int step);
 
+    public int      getId() { return id; }
+    public String   getManufacturer() { return manufacturer; }
+    public String   getModel() { return model; }
+    public String   getBatteryType() { return batteryType; }
+
     public void showBatteryState() {
         System.out.println("Батарейки " + batteryType + ": " + batteryLevel + "%");
     }
 
-    public int getId() { return id; }
+    // Переопределяем метод родителя Object аннотацией @Override
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " #" + id + ": " + manufacturer + " " + model
+                + ", батарейки " + batteryType;
+    }
 }
+
+
+

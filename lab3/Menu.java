@@ -16,7 +16,7 @@ class Menu {
     private static final String DEFAULT_BATTERY = "AA";
     private static final String[] BATTERY_TYPES = {"AA", "AAA"};
     private static final int VOLUME_STEP = 5;
-    private static final int MAX_CHANNEL = 10;
+    private static final int EXTRA_START = 6;   // с этого номера идут действия конкретного пульта
 
     // Methods
     public void run() {
@@ -174,11 +174,6 @@ class Menu {
     }
 
     private void workWithRemote() {
-        if (remotes.isEmpty()) {
-            System.out.println("Список пуст");
-            pause();
-            return;
-        }
         Remote r = pickRemote();
         if (r == null) {
             pause();
@@ -187,6 +182,7 @@ class Menu {
 
         boolean back = false;
         while (!back) {
+            List<String> extras = r.getExtraActions();
             clearScreen();
             System.out.println(r);
             System.out.println("Заряд пульта: " + r.getBatteryLevel() + "%");
@@ -194,12 +190,15 @@ class Menu {
             System.out.println("\n1 - " + (r.isOn() ? "выключить" : "включить"));
             System.out.println("2 - громкость +" + VOLUME_STEP);
             System.out.println("3 - громкость -" + VOLUME_STEP);
-            System.out.println("4 - выбрать канал / трек");
+            System.out.println("4 - выбрать " + r.getChannelLabel());
             System.out.println("5 - батарейки");
+            for (int i = 0; i < extras.size(); i++) {
+                System.out.println((EXTRA_START + i) + " - " + extras.get(i));
+            }
             System.out.println("0 - назад");
 
             // Выбор
-            int choice = readInt("Выбор", 0, 5, null);
+            int choice = readInt("Выбор", 0, EXTRA_START - 1 + extras.size(), null);
             boolean needPause = false;
             switch (choice) {
                 case 1 -> needPause = !r.togglePower();
@@ -208,6 +207,7 @@ class Menu {
                 case 4 -> needPause = !chooseChannel(r);
                 case 5 -> { r.showBatteryState(); needPause = true; }
                 case 0 -> back = true;
+                default -> needPause = !r.runExtra(choice - EXTRA_START);
             }
             if (needPause || (r.isDead() && !back)) pause();
         }

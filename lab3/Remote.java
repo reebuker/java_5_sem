@@ -48,6 +48,10 @@ abstract class Remote {
     protected abstract void onChangeVolume(int delta);
     protected abstract void onSetChannel(int number);
 
+    // дополнительные действия конкретного пульта: названия и их выполнение по номеру с 0
+    public abstract List<String> getExtraActions();
+    protected abstract void onExtra(int index);
+
     public final boolean turnOn() {
         if (!canUse(false)) return false;
         onTurnOn();
@@ -76,6 +80,13 @@ abstract class Remote {
         spendBattery();
         return true;
     }
+
+    public final boolean runExtra(int index) {
+        if (!canUse(true)) return false;
+        onExtra(index);
+        spendBattery();
+        return true;
+    }
     public void setManufacturer(String manufacturer) { this.manufacturer = manufacturer; }
     public void setModel(String model) { this.model = model; }
     public void setBatteryType(String batteryType) { this.batteryType = batteryType; }
@@ -98,6 +109,7 @@ abstract class Remote {
     }
 
     public abstract List<String> getChannels();
+    public String getChannelLabel() { return "канал / трек"; }
     public int getBatteryLevel() { return batteryLevel; }
     public int      getId() { return id; }
     public String   getManufacturer() { return manufacturer; }
@@ -140,6 +152,7 @@ abstract class Remote {
 
 class TvRemote extends Remote {
     private final Tv tv = Tv.getInstance();
+    private int previousChannel = 0;   // 0 - ещё не переключали
 
     TvRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
@@ -149,12 +162,36 @@ class TvRemote extends Remote {
     @Override protected void onTurnOn() { tv.turnOn(); }
     @Override protected void onTurnOff() { tv.turnOff(); }
     @Override protected void onChangeVolume(int delta) { tv.changeVolume(delta); }
-    @Override protected void onSetChannel(int number) { tv.setChannel(number); }
+    @Override protected void onSetChannel(int number) { switchTo(number); }
     @Override public List<String> getChannels() { return tv.getChannels(); }
+
+    @Override public List<String> getExtraActions() { return List.of("вернуться на прошлый канал"); }
+
+    @Override protected void onExtra(int index) {
+        switch (index) {
+            case 0 -> backToPrevious();
+        }
+    }
+
+    private void switchTo(int number) {
+        previousChannel = tv.getChannel();
+        tv.setChannel(number);
+    }
+
+    private void backToPrevious() {
+        if (previousChannel == 0) return;
+        switchTo(previousChannel);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", прошлый канал: " + (previousChannel == 0 ? "нет" : previousChannel);
+    }
 }
 
 class StereoRemote extends Remote {
     private final Stereo stereo = Stereo.getInstance();
+    private int playedCount = 0;
 
     StereoRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
@@ -164,12 +201,35 @@ class StereoRemote extends Remote {
     @Override protected void onTurnOn() { stereo.turnOn(); }
     @Override protected void onTurnOff() { stereo.turnOff(); }
     @Override protected void onChangeVolume(int delta) { stereo.changeVolume(delta); }
-    @Override protected void onSetChannel(int number) { stereo.setTrack(number); }
+    @Override protected void onSetChannel(int number) { play(number); }
     @Override public List<String> getChannels() { return stereo.getTracks(); }
+
+    @Override public List<String> getExtraActions() { return List.of("следующий трек"); }
+
+    @Override protected void onExtra(int index) {
+        switch (index) {
+            case 0 -> nextTrack();
+        }
+    }
+
+    private void play(int number) {
+        stereo.setTrack(number);
+        playedCount++;
+    }
+
+    private void nextTrack() {
+        play(stereo.getTrack() % stereo.getTracks().size() + 1);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", треков включено: " + playedCount;
+    }
 }
 
 class SmartHomeRemote extends Remote {
     private final SmartHome home = SmartHome.getInstance();
+    private int allOffCount = 0;
 
     SmartHomeRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
@@ -179,6 +239,25 @@ class SmartHomeRemote extends Remote {
     @Override protected void onTurnOn() { home.turnOn(); }
     @Override protected void onTurnOff() { home.turnOff(); }
     @Override protected void onChangeVolume(int delta) { System.out.println("В умном доме нет громкости"); }
-    @Override protected void onSetChannel(int number) { }
-    @Override public List<String> getChannels() { return List.of(); }
+    @Override protected void onSetChannel(int number) { home.toggleByNumber(number); }
+    @Override public List<String> getChannels() { return home.getAppliances(); }
+    @Override public String getChannelLabel() { return "прибор"; }
+
+    @Override public List<String> getExtraActions() { return List.of("выключить все приборы"); }
+
+    @Override protected void onExtra(int index) {
+        switch (index) {
+            case 0 -> allOff();
+        }
+    }
+
+    private void allOff() {
+        home.allOff();
+        allOffCount++;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", «выключить всё» нажато раз: " + allOffCount;
+    }
 }

@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,6 @@ abstract class Device {
 class Tv extends Device {
     // Data
     private static final Tv INSTANCE = new Tv();
-    private static final int CHANNELS = 10;
     private static final int MAX_VOLUME = 100;
 
     private final List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
@@ -49,6 +49,7 @@ class Tv extends Device {
     // Methods
     public static Tv getInstance() { return INSTANCE; }
     public List<String> getChannels() { return channels; }
+    public int getChannel() { return channel; }
 
     public void setChannel(int number) {
         channel = Math.max(1, Math.min(channels.size(), number));
@@ -68,7 +69,6 @@ class Stereo extends Device {
     // Data
     private static final Stereo INSTANCE = new Stereo();
     private static final int MAX_VOLUME = 100;
-    private static final int TRACKS = 10;
 
     private final List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
             "Лёгкий поп", "Классика");
@@ -81,6 +81,7 @@ class Stereo extends Device {
     // Methods
     public static Stereo getInstance() { return INSTANCE; }
     public List<String> getTracks() { return tracks; }
+    public int getTrack() { return track; }
 
     public void setTrack(int number) {
         track = Math.max(1, Math.min(tracks.size(), number));
@@ -107,7 +108,7 @@ class SmartHome extends Device {
         super("Умный дом");
         appliances.put("Свет в гостиной", false);
         appliances.put("Чайник", false);
-        appliances.put("Замок", true);
+        appliances.put("Обогреватель", false);
     }
 
     // Methods
@@ -118,6 +119,25 @@ class SmartHome extends Device {
         if (!appliances.containsKey(appliance)) return false;
         appliances.put(appliance, !appliances.get(appliance));
         return true;
+    }
+
+    // названия приборов вместе с состоянием, по порядку
+    public List<String> getAppliances() {
+        List<String> result = new ArrayList<>();
+        for (Map.Entry<String, Boolean> e : appliances.entrySet()) {
+            result.add(e.getKey() + " (" + (e.getValue() ? "вкл" : "выкл") + ")");
+        }
+        return result;
+    }
+
+    // number от 1, как в меню
+    public void toggleByNumber(int number) {
+        if (number < 1 || number > appliances.size()) return;
+        toggle(new ArrayList<>(appliances.keySet()).get(number - 1));
+    }
+
+    public void allOff() {
+        appliances.replaceAll((name, on) -> false);
     }
 
     @Override

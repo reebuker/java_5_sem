@@ -21,6 +21,9 @@
 Пульт управления для умного дома.
 */
 
+import java.util.List;
+import java.util.ArrayList;
+
 abstract class Remote {
     // Data
     private static int nextId = 0;
@@ -29,6 +32,8 @@ abstract class Remote {
     private final String model;
     private final String batteryType;
     private int batteryLevel = 100;
+
+    protected final List<Device> devices = new ArrayList<>();
 
     // Constructors
     protected Remote(String manufacturer, String model, String batteryType) {
@@ -48,9 +53,14 @@ abstract class Remote {
     public String   getManufacturer() { return manufacturer; }
     public String   getModel() { return model; }
     public String   getBatteryType() { return batteryType; }
+    public List<Device> getDevices() { return List.copyOf(devices); }
 
     public void showBatteryState() {
         System.out.println("Батарейки " + batteryType + ": " + batteryLevel + "%");
+    }
+
+    public void showDeviceState() {
+        for (Device d : devices) System.out.println(d);
     }
 
     // Переопределяем метод родителя Object аннотацией @Override
@@ -62,34 +72,43 @@ abstract class Remote {
 }
 
 class TvRemote extends Remote {
+    private final Tv tv = Tv.getInstance();
+
     TvRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
+        devices.add(tv);
     }
 
-    @Override public void turnOn() { System.out.println("Телевизор включен"); }
-    @Override public void turnOff() { System.out.println("Телевизор выключен"); }
-    @Override public void changeVolume(int delta) { System.out.println("Громкость телевизора: " + delta); }
-    @Override public void changeChannel(int step) { System.out.println("Канал телевизора: сдвиг на " + step); }
+    @Override public void turnOn() { tv.turnOn(); }
+    @Override public void turnOff() { tv.turnOff(); }
+    @Override public void changeVolume(int delta) { tv.changeVolume(delta); }
+    @Override public void changeChannel(int step) { tv.changeChannel(step); }
 }
 
 class StereoRemote extends Remote {
+    private final Stereo stereo = Stereo.getInstance();
+
     StereoRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
+        devices.add(stereo);
     }
 
-    @Override public void turnOn() { System.out.println("Стереосистема включена"); }
-    @Override public void turnOff() { System.out.println("Стереосистема выключена"); }
-    @Override public void changeVolume(int delta) { System.out.println("Громкость стереосистемы: " + delta); }
-    @Override public void changeChannel(int step) { System.out.println("Трек: сдвиг на " + step); }
+    @Override public void turnOn() { stereo.turnOn(); }
+    @Override public void turnOff() { stereo.turnOff(); }
+    @Override public void changeVolume(int delta) { stereo.changeVolume(delta); }
+    @Override public void changeChannel(int step) { stereo.changeTrack(step); }
 }
 
 class SmartHomeRemote extends Remote {
+    private final SmartHome home = SmartHome.getInstance();
+
     SmartHomeRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
+        devices.add(home);
     }
 
-    @Override public void turnOn() { System.out.println("Умный дом включен"); }
-    @Override public void turnOff() { System.out.println("Умный дом выключен"); }
+    @Override public void turnOn() { home.turnOn(); }
+    @Override public void turnOff() { home.turnOff(); }
     @Override public void changeVolume(int delta) { System.out.println("В умном доме нет громкости"); }
     @Override public void changeChannel(int step) { System.out.println("В умном доме нет каналов"); }
 }

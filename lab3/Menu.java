@@ -13,6 +13,7 @@ class Menu {
     private static final String DEFAULT_MANUFACTURER = "Samsung";
     private static final String DEFAULT_MODEL = "Basic";
     private static final String DEFAULT_BATTERY = "AA";
+    private static final String[] BATTERY_TYPES = {"AA", "AAA"};
 
     // Methods
     public void run() {
@@ -46,7 +47,7 @@ class Menu {
 
         String manufacturer = readString("Производитель", DEFAULT_MANUFACTURER);
         String model = readString("Модель", DEFAULT_MODEL);
-        String battery = readString("Тип батареек (AA/AAA)", DEFAULT_BATTERY);
+        String battery = readBattery("Тип батареек (AA/AAA)", DEFAULT_BATTERY);
 
         Remote remote = switch (type) {
             case 1 -> new TvRemote(manufacturer, model, battery);
@@ -100,6 +101,16 @@ class Menu {
             } catch (NumberFormatException e) {
                 System.out.println("Нужно целое число");
             }
+        }
+    }
+
+    private String readBattery(String prompt, String def) {
+        while (true) {
+            String s = readString(prompt, def).toUpperCase().replace('А', 'A'); // кириллическая А -> латинская
+            for (String t : BATTERY_TYPES) {
+                if (t.equals(s)) return t;
+            }
+            System.out.println("Допустимо только AA или AAA");
         }
     }
 }

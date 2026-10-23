@@ -34,7 +34,7 @@ abstract class Device {
 class Tv extends Device {
     // Data
     private static final Tv INSTANCE = new Tv();
-    private static final int CHANNELS = 99;
+    private static final int CHANNELS = 10;
     private static final int MAX_VOLUME = 100;
 
     private int channel = 1;
@@ -46,9 +46,9 @@ class Tv extends Device {
     // Methods
     public static Tv getInstance() { return INSTANCE; }
 
-    // по кругу: после 99 идет 1, перед 1 идет 99
-    public void changeChannel(int step) {
-        channel = Math.floorMod(channel - 1 + step, CHANNELS) + 1;
+
+    public void setChannel(int ch) {
+        channel = Math.max(1, Math.min(CHANNELS, ch));
     }
 
     public void changeVolume(int delta) {
@@ -63,9 +63,10 @@ class Stereo extends Device {
     // Data
     private static final Stereo INSTANCE = new Stereo();
     private static final int MAX_VOLUME = 100;
+    private static final int TRACKS = 10;
 
     private final List<String> tracks = List.of("Track 1", "Track 2", "Track 3");
-    private int track = 0;
+    private int track = 1;
     private int volume = 20;
 
     // Constructors
@@ -74,8 +75,8 @@ class Stereo extends Device {
     // Methods
     public static Stereo getInstance() { return INSTANCE; }
 
-    public void changeTrack(int step) {
-        track = Math.floorMod(track + step, tracks.size());
+    public void setTrack(int number) {
+        track = Math.max(1, Math.min(TRACKS, number));
     }
 
     public void changeVolume(int delta) {
@@ -83,7 +84,7 @@ class Stereo extends Device {
     }
 
     @Override
-    public String getStatus() { return tracks.get(track) + ", громкость " + volume; }
+    public String getStatus() { return "трек " + track + ", громкость " + volume; }
 }
 
 class SmartHome extends Device {

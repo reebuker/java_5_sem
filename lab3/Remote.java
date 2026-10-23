@@ -47,7 +47,7 @@ abstract class Remote {
     public abstract void turnOn();
     public abstract void turnOff();
     public abstract void changeVolume(int delta);
-    public abstract void changeChannel(int step);
+    public abstract void setChannel(int number);
 
     public int      getId() { return id; }
     public String   getManufacturer() { return manufacturer; }
@@ -61,6 +61,18 @@ abstract class Remote {
 
     public void showDeviceState() {
         for (Device d : devices) System.out.println(d);
+    }
+
+    public boolean isOn() {
+        for (Device d : devices) {
+            if (d.isOn()) return true;
+        }
+        return false;
+    }
+
+    public void togglePower() {
+        if (isOn()) turnOff();
+        else turnOn();
     }
 
     // Переопределяем метод родителя Object аннотацией @Override
@@ -82,7 +94,7 @@ class TvRemote extends Remote {
     @Override public void turnOn() { tv.turnOn(); }
     @Override public void turnOff() { tv.turnOff(); }
     @Override public void changeVolume(int delta) { tv.changeVolume(delta); }
-    @Override public void changeChannel(int step) { tv.changeChannel(step); }
+    @Override public void setChannel(int number) { tv.setChannel(number); }
 }
 
 class StereoRemote extends Remote {
@@ -96,7 +108,7 @@ class StereoRemote extends Remote {
     @Override public void turnOn() { stereo.turnOn(); }
     @Override public void turnOff() { stereo.turnOff(); }
     @Override public void changeVolume(int delta) { stereo.changeVolume(delta); }
-    @Override public void changeChannel(int step) { stereo.changeTrack(step); }
+    @Override public void setChannel(int number) { stereo.setTrack(number); }
 }
 
 class SmartHomeRemote extends Remote {
@@ -110,5 +122,5 @@ class SmartHomeRemote extends Remote {
     @Override public void turnOn() { home.turnOn(); }
     @Override public void turnOff() { home.turnOff(); }
     @Override public void changeVolume(int delta) { System.out.println("В умном доме нет громкости"); }
-    @Override public void changeChannel(int step) { System.out.println("В умном доме нет каналов"); }
+    @Override public void setChannel(int number) { System.out.println("В умном доме нет каналов"); }
 }

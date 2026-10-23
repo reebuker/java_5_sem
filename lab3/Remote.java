@@ -43,17 +43,71 @@ abstract class Remote {
         this.batteryType = batteryType;
     }
 
-    // Methods
-    public abstract void turnOn();
-    public abstract void turnOff();
-    public abstract void changeVolume(int delta);
-    public abstract void setChannel(int number);
+    protected abstract void onTurnOn();
+    protected abstract void onTurnOff();
+    protected abstract void onChangeVolume(int delta);
+    protected abstract void onSetChannel(int number);
 
+    public final boolean turnOn() {
+        if (!canUse(false)) return false;
+        onTurnOn();
+        spendBattery();
+        return true;
+    }
+
+    public final boolean turnOff() {
+        if (!canUse(false)) return false;
+        onTurnOff();
+        spendBattery();
+        return true;
+    }
+
+    public final boolean changeVolume(int delta) {
+        if (!canUse(true)) return false;
+        onChangeVolume(delta);
+        spendBattery();
+        return true;
+    }
+
+    public final boolean setChannel(int number) {
+        if (!canUse(true)) return false;
+        onSetChannel(number);
+        spendBattery();
+        return true;
+    }
+
+    public boolean isDead() { return batteryLevel <= 0; }
+
+    // можно ли пользоваться прямо сейчас, причину выводит сама
+    public boolean checkReady() { return canUse(true); }
+
+    private boolean canUse(boolean needsOn) {
+        if (isDead()) {
+            System.out.println("Пульт разряжен и больше не работает");
+            return false;
+        }
+        if (needsOn && !isOn()) {
+            System.out.println("Пульт выключен, сначала включите");
+            return false;
+        }
+        return true;
+    }
+
+    public abstract List<String> getChannels();
+    public int getBatteryLevel() { return batteryLevel; }
     public int      getId() { return id; }
     public String   getManufacturer() { return manufacturer; }
     public String   getModel() { return model; }
     public String   getBatteryType() { return batteryType; }
     public List<Device> getDevices() { return List.copyOf(devices); }
+
+    private void spendBattery() {
+        batteryLevel--;
+        if (batteryLevel == 0) {
+            for (Device d : devices) d.turnOff();
+            System.out.println("Батарейки сели, пульт выключился навсегда");
+        }
+    }
 
     public void showBatteryState() {
         System.out.println("Батарейки " + batteryType + ": " + batteryLevel + "%");
@@ -70,10 +124,7 @@ abstract class Remote {
         return false;
     }
 
-    public void togglePower() {
-        if (isOn()) turnOff();
-        else turnOn();
-    }
+    public boolean togglePower() { return isOn() ? turnOff() : turnOn(); }
 
     // Переопределяем метод родителя Object аннотацией @Override
     @Override
@@ -91,10 +142,11 @@ class TvRemote extends Remote {
         devices.add(tv);
     }
 
-    @Override public void turnOn() { tv.turnOn(); }
-    @Override public void turnOff() { tv.turnOff(); }
-    @Override public void changeVolume(int delta) { tv.changeVolume(delta); }
-    @Override public void setChannel(int number) { tv.setChannel(number); }
+    @Override protected void onTurnOn() { tv.turnOn(); }
+    @Override protected void onTurnOff() { tv.turnOff(); }
+    @Override protected void onChangeVolume(int delta) { tv.changeVolume(delta); }
+    @Override protected void onSetChannel(int number) { tv.setChannel(number); }
+    @Override public List<String> getChannels() { return tv.getChannels(); }
 }
 
 class StereoRemote extends Remote {
@@ -105,10 +157,11 @@ class StereoRemote extends Remote {
         devices.add(stereo);
     }
 
-    @Override public void turnOn() { stereo.turnOn(); }
-    @Override public void turnOff() { stereo.turnOff(); }
-    @Override public void changeVolume(int delta) { stereo.changeVolume(delta); }
-    @Override public void setChannel(int number) { stereo.setTrack(number); }
+    @Override protected void onTurnOn() { stereo.turnOn(); }
+    @Override protected void onTurnOff() { stereo.turnOff(); }
+    @Override protected void onChangeVolume(int delta) { stereo.changeVolume(delta); }
+    @Override protected void onSetChannel(int number) { stereo.setTrack(number); }
+    @Override public List<String> getChannels() { return stereo.getTracks(); }
 }
 
 class SmartHomeRemote extends Remote {
@@ -119,8 +172,9 @@ class SmartHomeRemote extends Remote {
         devices.add(home);
     }
 
-    @Override public void turnOn() { home.turnOn(); }
-    @Override public void turnOff() { home.turnOff(); }
-    @Override public void changeVolume(int delta) { System.out.println("В умном доме нет громкости"); }
-    @Override public void setChannel(int number) { System.out.println("В умном доме нет каналов"); }
+    @Override protected void onTurnOn() { home.turnOn(); }
+    @Override protected void onTurnOff() { home.turnOff(); }
+    @Override protected void onChangeVolume(int delta) { System.out.println("В умном доме нет громкости"); }
+    @Override protected void onSetChannel(int number) { }
+    @Override public List<String> getChannels() { return List.of(); }
 }

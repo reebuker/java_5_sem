@@ -37,6 +37,9 @@ class Tv extends Device {
     private static final int CHANNELS = 10;
     private static final int MAX_VOLUME = 100;
 
+    private final List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
+            "Документальный", "Сериалы", "Наука", "Юмор", "Погода");
+
     private int channel = 1;
     private int volume = 20;
 
@@ -45,10 +48,10 @@ class Tv extends Device {
 
     // Methods
     public static Tv getInstance() { return INSTANCE; }
+    public List<String> getChannels() { return channels; }
 
-
-    public void setChannel(int ch) {
-        channel = Math.max(1, Math.min(CHANNELS, ch));
+    public void setChannel(int number) {
+        channel = Math.max(1, Math.min(channels.size(), number));
     }
 
     public void changeVolume(int delta) {
@@ -56,7 +59,9 @@ class Tv extends Device {
     }
 
     @Override
-    public String getStatus() { return "канал " + channel + ", громкость " + volume; }
+    public String getStatus() {
+        return "канал " + channel + " (" + channels.get(channel - 1) + "), громкость " + volume;
+    }
 }
 
 class Stereo extends Device {
@@ -65,7 +70,8 @@ class Stereo extends Device {
     private static final int MAX_VOLUME = 100;
     private static final int TRACKS = 10;
 
-    private final List<String> tracks = List.of("Track 1", "Track 2", "Track 3");
+    private final List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
+            "Лёгкий поп", "Классика");
     private int track = 1;
     private int volume = 20;
 
@@ -74,9 +80,10 @@ class Stereo extends Device {
 
     // Methods
     public static Stereo getInstance() { return INSTANCE; }
+    public List<String> getTracks() { return tracks; }
 
     public void setTrack(int number) {
-        track = Math.max(1, Math.min(TRACKS, number));
+        track = Math.max(1, Math.min(tracks.size(), number));
     }
 
     public void changeVolume(int delta) {
@@ -84,7 +91,9 @@ class Stereo extends Device {
     }
 
     @Override
-    public String getStatus() { return "трек " + track + ", громкость " + volume; }
+    public String getStatus() {
+        return "трек " + track + " (" + tracks.get(track - 1) + "), громкость " + volume;
+    }
 }
 
 class SmartHome extends Device {

@@ -126,6 +126,19 @@ class Menu {
         return null;
     }
 
+    private boolean chooseChannel(Remote r) {
+        List<String> list = r.getChannels();
+        if (list.isEmpty()) {
+            System.out.println("Здесь нет каналов");
+            return false;
+        }
+        if (!r.checkReady()) return false;
+        for (int i = 0; i < list.size(); i++) {
+            System.out.println((i + 1) + " - " + list.get(i));
+        }
+        return r.setChannel(readInt("Номер", 1, list.size(), null));
+    }
+
     private void workWithRemote() {
         if (remotes.isEmpty()) {
             System.out.println("Список пуст");
@@ -144,6 +157,7 @@ class Menu {
         while (!back) {
             clearScreen();
             System.out.println(r);
+            System.out.println("Заряд пульта: " + r.getBatteryLevel() + "%");
             r.showDeviceState();
             System.out.println("\n1 - " + (r.isOn() ? "выключить" : "включить"));
             System.out.println("2 - громкость +" + VOLUME_STEP);
@@ -152,14 +166,18 @@ class Menu {
             System.out.println("5 - батарейки");
             System.out.println("0 - назад");
 
-            switch (readInt("Выбор: ", 0, 5, null)) {
-                case 1 -> r.togglePower();
-                case 2 -> r.changeVolume(VOLUME_STEP);
-                case 3 -> r.changeVolume(-VOLUME_STEP);
-                case 4 -> r.setChannel(readInt("Номер (1-" + MAX_CHANNEL + ")", 1, MAX_CHANNEL, null));
-                case 5 -> { r.showBatteryState(); pause(); }
+            // Выбор
+            int choice = readInt("Выбор", 0, 5, null);
+            boolean needPause = false;
+            switch (choice) {
+                case 1 -> needPause = !r.togglePower();
+                case 2 -> needPause = !r.changeVolume(VOLUME_STEP);
+                case 3 -> needPause = !r.changeVolume(-VOLUME_STEP);
+                case 4 -> needPause = !chooseChannel(r);
+                case 5 -> { r.showBatteryState(); needPause = true; }
                 case 0 -> back = true;
             }
+            if (needPause || (r.isDead() && !back)) pause();
         }
     }
 }

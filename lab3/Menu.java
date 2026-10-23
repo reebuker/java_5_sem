@@ -25,12 +25,13 @@ class Menu {
             while (running) {
                 clearScreen();
                 printMenu();
-                int choice = readInt("Выбор: ", 0, 3, null);
+                int choice = readInt("Выбор: ", 0, 4, null);
                 clearScreen();
                 switch (choice) {
                     case 1 -> { addRemote(); pause(); }
                     case 2 -> { showRemotes(); pause(); }
                     case 3 -> workWithRemote();
+                    case 4 -> { deleteRemote(); pause(); }
                     case 0 -> running = false;
                 }
             }
@@ -43,6 +44,7 @@ class Menu {
         System.out.println("1 - добавить пульт");
         System.out.println("2 - показать пульты");
         System.out.println("3 - работа с пультом");
+        System.out.println("4 - удалить пульт");
         System.out.println("0 - выход");
     }
 
@@ -71,6 +73,25 @@ class Menu {
         for (Remote r : remotes) {
             System.out.println(r);
         }
+    }
+
+    // null, если списка нет или id не найден 
+    private Remote pickRemote() {
+        if (remotes.isEmpty()) {
+            System.out.println("Список пуст");
+            return null;
+        }
+        showRemotes();
+        Remote r = findRemote(readInt("\nId пульта", 0, Integer.MAX_VALUE, null));
+        if (r == null) System.out.println("Пульта с таким id нет");
+        return r;
+    }
+
+    private void deleteRemote() {
+        Remote r = pickRemote();
+        if (r == null) return;
+        remotes.remove(r);
+        System.out.println("\nУдалён: " + r);
     }
 
     // Input / output
@@ -145,10 +166,8 @@ class Menu {
             pause();
             return;
         }
-        showRemotes();
-        Remote r = findRemote(readInt("\nId пульта", 0, Integer.MAX_VALUE, null));
+        Remote r = pickRemote();
         if (r == null) {
-            System.out.println("Пульта с таким id нет");
             pause();
             return;
         }

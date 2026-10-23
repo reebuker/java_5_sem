@@ -25,13 +25,14 @@ class Menu {
             while (running) {
                 clearScreen();
                 printMenu();
-                int choice = readInt("Выбор: ", 0, 4, null);
+                int choice = readInt("Выбор: ", 0, 5, null);
                 clearScreen();
                 switch (choice) {
                     case 1 -> { addRemote(); pause(); }
                     case 2 -> { showRemotes(); pause(); }
                     case 3 -> workWithRemote();
                     case 4 -> { deleteRemote(); pause(); }
+                    case 5 -> { editRemote(); pause(); }
                     case 0 -> running = false;
                 }
             }
@@ -45,6 +46,7 @@ class Menu {
         System.out.println("2 - показать пульты");
         System.out.println("3 - работа с пультом");
         System.out.println("4 - удалить пульт");
+        System.out.println("5 - изменить пульт");
         System.out.println("0 - выход");
     }
 
@@ -92,6 +94,17 @@ class Menu {
         if (r == null) return;
         remotes.remove(r);
         System.out.println("\nУдалён: " + r);
+    }
+
+    private void editRemote() {
+        Remote r = pickRemote();
+        if (r == null) return;
+
+        System.out.println("\nEnter - оставить без изменений");
+        r.setManufacturer(readString("Производитель", r.getManufacturer()));
+        r.setModel(readString("Модель", r.getModel()));
+        r.setBatteryType(readBattery("Тип батареек (AA/AAA)", r.getBatteryType()));
+        System.out.println("\nОбновлён: " + r);
     }
 
     // Input / output

@@ -28,9 +28,9 @@ abstract class Remote {
     // Data
     private static int nextId = 0;
     private final int id;
-    private final String manufacturer;
-    private final String model;
-    private final String batteryType;
+    private String manufacturer;
+    private String model;
+    private String batteryType;
     private int batteryLevel = 100;
 
     protected final List<Device> devices = new ArrayList<>();
@@ -62,6 +62,7 @@ abstract class Remote {
         return true;
     }
 
+    // Setters
     public final boolean changeVolume(int delta) {
         if (!canUse(true)) return false;
         onChangeVolume(delta);
@@ -75,10 +76,13 @@ abstract class Remote {
         spendBattery();
         return true;
     }
+    public void setManufacturer(String manufacturer) { this.manufacturer = manufacturer; }
+    public void setModel(String model) { this.model = model; }
+    public void setBatteryType(String batteryType) { this.batteryType = batteryType; }
 
     public boolean isDead() { return batteryLevel <= 0; }
 
-    // можно ли пользоваться прямо сейчас, причину выводит сама
+    // можно ли пользоваться прямо сейчас
     public boolean checkReady() { return canUse(true); }
 
     private boolean canUse(boolean needsOn) {

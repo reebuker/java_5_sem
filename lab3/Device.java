@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 abstract class Device {
     // Data
@@ -140,6 +141,16 @@ class SmartHome extends Device {
         appliances.replaceAll((name, on) -> false);
     }
 
+    // каждый прибор включается или выключается случайно, возвращает сколько включено
+    public int randomScene() {
+        int on = 0;
+        for (String name : appliances.keySet()) {
+            boolean value = ThreadLocalRandom.current().nextBoolean();
+            appliances.put(name, value);
+            if (value) on++;
+        }
+        return on;
+    }
     @Override
     public String getStatus() { return appliances.toString(); }
 }

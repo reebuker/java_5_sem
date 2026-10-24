@@ -23,6 +23,7 @@
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 abstract class Remote {
     // Data
@@ -91,6 +92,10 @@ abstract class Remote {
     public void setModel(String model) { this.model = model; }
     public void setBatteryType(String batteryType) { this.batteryType = batteryType; }
 
+    // случайное целое от min до max включительно
+    protected static int randomBetween(int min, int max) {
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
+    }
     public boolean isDead() { return batteryLevel <= 0; }
 
     // можно ли пользоваться прямо сейчас
@@ -118,7 +123,8 @@ abstract class Remote {
     public List<Device> getDevices() { return List.copyOf(devices); }
 
     private void spendBattery() {
-        batteryLevel--;
+        batteryLevel -= randomBetween(2, 5);
+        batteryLevel = Math.max(0, batteryLevel);
         if (batteryLevel == 0) {
             for (Device d : devices) d.turnOff();
             System.out.println("Батарейки сели, пульт выключился навсегда");
@@ -153,11 +159,13 @@ abstract class Remote {
 class TvRemote extends Remote {
     private final Tv tv = Tv.getInstance();
     private int previousChannel = 0;   // 0 - ещё не переключали
+    private int lastRandomChannel = 0; // 0 - случайный ещё не выбирали 
 
     TvRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
         devices.add(tv);
     }
+
 
     @Override protected void onTurnOn() { tv.turnOn(); }
     @Override protected void onTurnOff() { tv.turnOff(); }
@@ -165,11 +173,14 @@ class TvRemote extends Remote {
     @Override protected void onSetChannel(int number) { switchTo(number); }
     @Override public List<String> getChannels() { return tv.getChannels(); }
 
-    @Override public List<String> getExtraActions() { return List.of("вернуться на прошлый канал"); }
+    @Override public List<String> getExtraActions() {
+        return List.of("вернуться на прошлый канал", "случайный канал");
+    }
 
     @Override protected void onExtra(int index) {
         switch (index) {
             case 0 -> backToPrevious();
+            case 1 -> randomChannel();
         }
     }
 
@@ -183,15 +194,22 @@ class TvRemote extends Remote {
         switchTo(previousChannel);
     }
 
+    private void randomChannel() {
+        lastRandomChannel = randomBetween(1, tv.getChannels().size());
+        switchTo(lastRandomChannel);
+    }
+
     @Override
     public String toString() {
-        return super.toString() + ", прошлый канал: " + (previousChannel == 0 ? "нет" : previousChannel);
+        return super.toString() + ", прошлый канал: " + (previousChannel == 0 ? "нет" : previousChannel)
+                + ", последний случайный: " + (lastRandomChannel == 0 ? "нет" : lastRandomChannel);
     }
 }
 
 class StereoRemote extends Remote {
     private final Stereo stereo = Stereo.getInstance();
     private int playedCount = 0;
+    private int lastShuffle = 0;       
 
     StereoRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
@@ -204,12 +222,20 @@ class StereoRemote extends Remote {
     @Override protected void onSetChannel(int number) { play(number); }
     @Override public List<String> getChannels() { return stereo.getTracks(); }
 
-    @Override public List<String> getExtraActions() { return List.of("следующий трек"); }
+    @Override public List<String> getExtraActions() {
+        return List.of("следующий трек", "случайный трек");
+    }
 
     @Override protected void onExtra(int index) {
         switch (index) {
             case 0 -> nextTrack();
+            case 1 -> shuffle();
         }
+    }
+
+    private void shuffle() {
+        lastShuffle = randomBetween(1, stereo.getTracks().size());
+        play(lastShuffle);
     }
 
     private void play(int number) {
@@ -223,13 +249,15 @@ class StereoRemote extends Remote {
 
     @Override
     public String toString() {
-        return super.toString() + ", треков включено: " + playedCount;
+        return super.toString() + ", треков включено: " + playedCount
+                + ", последний случайный: " + (lastShuffle == 0 ? "нет" : lastShuffle);
     }
 }
 
 class SmartHomeRemote extends Remote {
     private final SmartHome home = SmartHome.getInstance();
     private int allOffCount = 0;
+    private int lastSceneOn = -1;      // -1 - сценарий ещё не запускали   
 
     SmartHomeRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
@@ -243,11 +271,14 @@ class SmartHomeRemote extends Remote {
     @Override public List<String> getChannels() { return home.getAppliances(); }
     @Override public String getChannelLabel() { return "прибор"; }
 
-    @Override public List<String> getExtraActions() { return List.of("выключить все приборы"); }
+    @Override public List<String> getExtraActions() {
+        return List.of("выключить все приборы", "случайный сценарий");
+    }
 
     @Override protected void onExtra(int index) {
         switch (index) {
             case 0 -> allOff();
+            case 1 -> lastSceneOn = home.randomScene();
         }
     }
 
@@ -258,6 +289,7 @@ class SmartHomeRemote extends Remote {
 
     @Override
     public String toString() {
-        return super.toString() + ", «выключить всё» нажато раз: " + allOffCount;
+        return super.toString() + ", «выключить всё» нажато раз: " + allOffCount
+                + ", после сценария включено: " + (lastSceneOn < 0 ? "нет" : lastSceneOn);
     }
 }

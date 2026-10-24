@@ -27,12 +27,18 @@ import java.util.concurrent.ThreadLocalRandom;
 
 abstract class Remote {
     // Data
+    private static final int MIN_DELTA_BATTERY = 2;
+    private static final int MAX_DELTA_BATTERY = 5;
+    private static final int MIN_START_BATTERY = 80;
+    private static final int MAX_START_BATTERY = 100;
+
     private static int nextId = 0;
     private final int id;
     private String manufacturer;
     private String model;
     private String batteryType;
-    private int batteryLevel = 100;
+    
+    private int batteryLevel = randomBetween(MIN_START_BATTERY, MAX_START_BATTERY);   // было = 100
 
     protected final List<Device> devices = new ArrayList<>();
 
@@ -123,7 +129,7 @@ abstract class Remote {
     public List<Device> getDevices() { return List.copyOf(devices); }
 
     private void spendBattery() {
-        batteryLevel -= randomBetween(2, 5);
+        batteryLevel -= randomBetween(MIN_DELTA_BATTERY, MAX_DELTA_BATTERY);
         batteryLevel = Math.max(0, batteryLevel);
         if (batteryLevel == 0) {
             for (Device d : devices) d.turnOff();

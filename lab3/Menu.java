@@ -11,6 +11,7 @@ class Menu {
 
     // Constants
     private static final int DEFAULT_TYPE = 1;
+    private static final int MAX_NAME_LENGTH = 20;
     private static final String DEFAULT_MANUFACTURER = "Samsung";
     private static final String DEFAULT_MODEL = "Basic";
     private static final String DEFAULT_BATTERY = "AA";
@@ -54,8 +55,8 @@ class Menu {
         System.out.println("1 - телевизор, 2 - стереосистема, 3 - умный дом");
         int type = readInt("Тип", 1, 3, DEFAULT_TYPE);
 
-        String manufacturer = readString("Производитель", DEFAULT_MANUFACTURER);
-        String model = readString("Модель", DEFAULT_MODEL);
+        String manufacturer = readName("Производитель", DEFAULT_MANUFACTURER);
+        String model = readName("Модель", DEFAULT_MODEL);
         String battery = readBattery("Тип батареек (AA/AAA)", DEFAULT_BATTERY);
 
         Remote remote = switch (type) {
@@ -101,8 +102,8 @@ class Menu {
         if (r == null) return;
 
         System.out.println("\nEnter - оставить без изменений");
-        r.setManufacturer(readString("Производитель", r.getManufacturer()));
-        r.setModel(readString("Модель", r.getModel()));
+        r.setManufacturer(readName("Производитель", r.getManufacturer()));
+        r.setModel(readName("Модель", r.getModel()));
         r.setBatteryType(readBattery("Тип батареек (AA/AAA)", r.getBatteryType()));
         System.out.println("\nОбновлён: " + r);
     }
@@ -125,6 +126,15 @@ class Menu {
     private String readString(String prompt, String def) {
         String s = readLine(prompt + " [" + def + "]: ");
         return s.isEmpty() ? def : s;
+    }
+
+    // как readString, но длиннее MAX_NAME_LENGTH не принимает
+    private String readName(String prompt, String def) {
+        while (true) {
+            String s = readString(prompt, def);
+            if (s.length() <= MAX_NAME_LENGTH) return s;
+            System.out.println("Не длиннее " + MAX_NAME_LENGTH + " символов");
+        }
     }
 
     // def = null значит значения по умолчанию нет, пустой ввод не принимается

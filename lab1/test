@@ -1,0 +1,37 @@
+char c = 45672; x
+зкште(с)
+
+public static void main(String[] str) {
+
+}
+
+
+int a = 011; x
+sout(a)
+
+int b = 0x1A; x
+sout(b)
+
+int bin = 0b11;
+int oct = 011;
+int hex = 0x11;
+
+System.out.printf("%o, 0x%04X, %s", oct, hex, Integer.toBinaryString(bin));
+
+
+int a = 3; b = 2;
+int c ;
+
+if (a  > 0 & b < 9){ 
+	c = 5;
+}
+
+int c = (a & b) > 7 ? 5 : 0;
+
+c = a ^ b;
+
+C = -64 >> 2;
+C = 2 << 2;
+
+>>>
+<<<

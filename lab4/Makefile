@@ -1,6 +1,6 @@
 SRC := src
 BUILD := build
-MAIN := Main
+MAIN := app.Main
 
 SOURCES := $(shell find $(SRC) -name '*.java')
 

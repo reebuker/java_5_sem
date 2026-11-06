@@ -1,3 +1,10 @@
+package menu;
+
+import remote.Remote;
+import remote.TvRemote;
+import remote.StereoRemote;
+import remote.SmartHomeRemote;
+import dataloader.DataLoader;
 
 // Menu.java
 import java.util.ArrayList;
@@ -5,7 +12,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-class Menu {
+public class Menu {
     // Data
     private final List<Remote> remotes = new ArrayList<>();
     private final Scanner in = new Scanner(System.in);

@@ -1,6 +1,8 @@
+package device;
+
 import java.util.List;
 
-class Stereo extends Device {
+public class Stereo extends Device {
     // Data
     private static final Stereo INSTANCE = new Stereo();
     private static final int MAX_VOLUME = 100;

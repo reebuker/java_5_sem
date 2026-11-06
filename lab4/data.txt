@@ -1,0 +1,5 @@
+class: TvRemote
+manufacturer: Samsung
+model: glc320
+batteryType: aa
+

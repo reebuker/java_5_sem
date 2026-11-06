@@ -1,11 +1,15 @@
+package remote;
+
+import device.Tv;
+
 import java.util.List;
 
-class TvRemote extends Remote {
+public class TvRemote extends Remote {
     private final Tv tv = Tv.getInstance();
     private int previousChannel = 0; // 0 - ещё не переключали
     private int lastRandomChannel = 0; // 0 - случайный ещё не выбирали
 
-    TvRemote(String manufacturer, String model, String batteryType) {
+    public TvRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
         devices.add(tv);
     }

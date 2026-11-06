@@ -1,10 +1,12 @@
+package device;
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-class SmartHome extends Device {
+public class SmartHome extends Device {
     // Data
     private static final SmartHome INSTANCE = new SmartHome();
 

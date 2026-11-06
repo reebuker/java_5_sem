@@ -1,8 +1,12 @@
+package remote;
+
+import device.Device;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-abstract class Remote {
+abstract public class Remote {
     // Data
     private static final int MIN_DELTA_BATTERY = 2;
     private static final int MAX_DELTA_BATTERY = 5;

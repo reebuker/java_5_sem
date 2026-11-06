@@ -1,6 +1,8 @@
+package device;
+
 import java.util.List;
 
-class Tv extends Device {
+public class Tv extends Device {
     // Data
     private static final Tv INSTANCE = new Tv();
     private static final int MAX_VOLUME = 100;

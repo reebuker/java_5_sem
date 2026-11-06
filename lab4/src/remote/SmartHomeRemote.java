@@ -1,11 +1,15 @@
+package remote;
+
+import device.SmartHome;
+
 import java.util.List;
 
-class SmartHomeRemote extends Remote {
+public class SmartHomeRemote extends Remote {
     private final SmartHome home = SmartHome.getInstance();
     private int allOffCount = 0;
     private int lastSceneOn = -1; // -1 - сценарий ещё не запускали
 
-    SmartHomeRemote(String manufacturer, String model, String batteryType) {
+    public SmartHomeRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
         devices.add(home);
     }

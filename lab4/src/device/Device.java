@@ -1,4 +1,6 @@
-abstract class Device {
+package device;
+
+abstract public class Device {
     // Data
     private static int nextId = 0;
     private final int id;

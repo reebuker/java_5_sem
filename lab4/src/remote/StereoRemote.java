@@ -1,11 +1,15 @@
+package remote;
+
+import device.Stereo;
+
 import java.util.List;
 
-class StereoRemote extends Remote {
+public class StereoRemote extends Remote {
     private final Stereo stereo = Stereo.getInstance();
     private int playedCount = 0;
     private int lastShuffle = 0;
 
-    StereoRemote(String manufacturer, String model, String batteryType) {
+    public StereoRemote(String manufacturer, String model, String batteryType) {
         super(manufacturer, model, batteryType);
         devices.add(stereo);
     }

@@ -5,7 +5,7 @@ import device.Tv;
 import java.util.List;
 
 public class TvRemote extends Remote {
-    private final Tv tv = Tv.getInstance();
+    private final Tv tv = new Tv();
     private int previousChannel = 0; // 0 - ещё не переключали
     private int lastRandomChannel = 0; // 0 - случайный ещё не выбирали
 

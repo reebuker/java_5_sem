@@ -4,7 +4,6 @@ import java.util.List;
 
 public class Stereo extends Device {
     // Data
-    private static final Stereo INSTANCE = new Stereo();
     private static final int MAX_VOLUME = 100;
 
     private List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
@@ -13,15 +12,11 @@ public class Stereo extends Device {
     private int volume = 20;
 
     // Constructors
-    private Stereo() {
+    public Stereo() {
         super("Стереосистема");
     }
 
     // Methods
-    public static Stereo getInstance() {
-        return INSTANCE;
-    }
-
     public List<String> getTracks() {
         return tracks;
     }

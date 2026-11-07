@@ -4,7 +4,6 @@ import java.util.List;
 
 public class Tv extends Device {
     // Data
-    private static final Tv INSTANCE = new Tv();
     private static final int MAX_VOLUME = 100;
 
     private List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
@@ -14,15 +13,11 @@ public class Tv extends Device {
     private int volume = 20;
 
     // Constructors
-    private Tv() {
+    public Tv() {
         super("Телевизор");
     }
 
     // Methods
-    public static Tv getInstance() {
-        return INSTANCE;
-    }
-
     public List<String> getChannels() {
         return channels;
     }

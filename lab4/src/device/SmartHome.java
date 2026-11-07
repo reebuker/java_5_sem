@@ -8,12 +8,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class SmartHome extends Device {
     // Data
-    private static final SmartHome INSTANCE = new SmartHome();
-
     private final Map<String, Boolean> appliances = new LinkedHashMap<>();
 
     // Constructors
-    private SmartHome() {
+    public SmartHome() {
         super("Умный дом");
         appliances.put("Свет в гостиной", false);
         appliances.put("Чайник", false);
@@ -21,9 +19,6 @@ public class SmartHome extends Device {
     }
 
     // Methods
-    public static SmartHome getInstance() {
-        return INSTANCE;
-    }
 
     // false, если такого прибора нет
     public boolean toggle(String appliance) {

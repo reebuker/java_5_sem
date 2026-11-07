@@ -5,7 +5,7 @@ import device.Stereo;
 import java.util.List;
 
 public class StereoRemote extends Remote {
-    private final Stereo stereo = Stereo.getInstance();
+    private final Stereo stereo = new Stereo();
     private int playedCount = 0;
     private int lastShuffle = 0;
 

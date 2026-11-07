@@ -5,7 +5,7 @@ import device.SmartHome;
 import java.util.List;
 
 public class SmartHomeRemote extends Remote {
-    private final SmartHome home = SmartHome.getInstance();
+    private final SmartHome home = new SmartHome();
     private int allOffCount = 0;
     private int lastSceneOn = -1; // -1 - сценарий ещё не запускали
 

@@ -90,7 +90,6 @@ public class Menu {
             }
             System.out.println("\nНайдено объектов: " + loader.getFound()
                     + " (неизвестного типа пропущено: " + loader.getUnknown() + ")");
-            System.out.println("Создано пультов: " + loaded.size() + ", отвергнуто: " + loader.getSkipped());
             System.out.println("Свойств прочитано: " + loader.getPropertiesRead()
                     + ", не найдено: " + loader.getPropertiesMissing()
                     + ", некорректных: " + loader.getPropertiesInvalid());

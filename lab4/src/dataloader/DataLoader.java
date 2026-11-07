@@ -1,7 +1,5 @@
 package dataloader;
 
-import remote.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import remote.*;
 
 public class DataLoader {
     // Data
@@ -29,12 +29,11 @@ public class DataLoader {
     private final BufferedReader stream;
 
     // итоги последнего чтения
-    private int found; // объектов известных типов
-    private int skipped; // из них отвергнуто
-    private int unknown; // объектов неизвестных типов
+    private int found; // объектов известных типов, на каждый создаётся пульт
+    private int unknown; // объектов неизвестных типов, они пропущены
     private int propertiesRead; // свойства прочитаны и корректны
     private int propertiesMissing; // свойства нет или оно пустое, взято умолчание
-    private int propertiesInvalid; // свойство есть, но некорректное
+    private int propertiesInvalid; // свойство есть, но некорректное, взято умолчание
 
     // Constructors
     public DataLoader(BufferedReader stream) {
@@ -44,10 +43,6 @@ public class DataLoader {
     // Getters
     public int getFound() {
         return found;
-    }
-
-    public int getSkipped() {
-        return skipped;
     }
 
     public int getUnknown() {
@@ -70,7 +65,7 @@ public class DataLoader {
     // читает поток до конца, на каждую строку "class: ..." заводит новый объект,
     // все поля до следующей такой строки относятся к нему
     public List<Remote> load() throws IOException {
-        found = skipped = unknown = 0;
+        found = unknown = 0;
         propertiesRead = propertiesMissing = propertiesInvalid = 0;
 
         List<Remote> result = new ArrayList<>();
@@ -98,8 +93,8 @@ public class DataLoader {
         return result;
     }
 
-    // сначала проверяет все свойства, и только если всё в порядке, создаёт пульт:
-    // так id не тратятся на отвергнутые объекты, а устройства не портятся
+    // один корректный class это один пульт, а свойства, которых нет или которые
+    // кривые, заменяются умолчанием, так что бред в пульт не попадает
     private void addRemote(List<Remote> result, String type, Map<String, String> fields) {
         if (type == null)
             return;
@@ -108,19 +103,11 @@ public class DataLoader {
             return;
         }
         found++;
-        int readBefore = propertiesRead;
 
         String manufacturer = checkName(fields.get("manufacturer"), Remote.DEFAULT_MANUFACTURER);
         String model = checkName(fields.get("model"), Remote.DEFAULT_MODEL);
         String batteryType = checkBattery(fields.get("batteryType"));
         List<String> items = checkList(fields.get(LIST_KEYS.get(type)));
-
-        // любое некорректное свойство или ни одного прочитанного: объект не берём
-        boolean broken = manufacturer == null || model == null || batteryType == null || items == null;
-        if (broken || propertiesRead == readBefore) {
-            skipped++;
-            return;
-        }
 
         Remote remote = switch (type) {
             case "TvRemote" -> new TvRemote(manufacturer, model, batteryType);
@@ -133,7 +120,7 @@ public class DataLoader {
         result.add(remote);
     }
 
-    // нет или пусто -> умолчание, слишком длинное -> null, иначе само значение
+    // нет, пусто или длиннее допустимого -> умолчание
     private String checkName(String raw, String def) {
         if (raw == null || raw.isEmpty()) {
             propertiesMissing++;
@@ -141,13 +128,13 @@ public class DataLoader {
         }
         if (raw.length() > Remote.MAX_NAME_LENGTH) {
             propertiesInvalid++;
-            return null;
+            return def;
         }
         propertiesRead++;
         return raw;
     }
 
-    // нет или пусто -> умолчание, не AA и не AAA -> null
+    // нет, пусто или не AA и не AAA -> умолчание
     private String checkBattery(String raw) {
         if (raw == null || raw.isEmpty()) {
             propertiesMissing++;
@@ -156,13 +143,13 @@ public class DataLoader {
         String battery = Remote.normalizeBattery(raw);
         if (battery == null) {
             propertiesInvalid++;
-            return null;
+            return Remote.DEFAULT_BATTERY;
         }
         propertiesRead++;
         return battery;
     }
 
-    // нет или пусто -> пустой список (оставить прежний), без кавычек -> null
+    // нет, пусто или без кавычек -> пустой список (у устройства останется прежний)
     private List<String> checkList(String raw) {
         if (raw == null || raw.isEmpty()) {
             propertiesMissing++;
@@ -170,7 +157,7 @@ public class DataLoader {
         }
         if (!LIST_VALUE.matcher(raw).matches()) {
             propertiesInvalid++;
-            return null;
+            return List.of();
         }
         List<String> items = new ArrayList<>();
         Matcher m = LIST_ITEM.matcher(raw);

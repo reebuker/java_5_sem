@@ -82,12 +82,18 @@ public class Menu {
     private void readFromFile() {
         filename = readString("Имя файла", filename);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename, StandardCharsets.UTF_8))) {
-            List<Remote> loaded = new DataLoader(reader).load();
+            DataLoader loader = new DataLoader(reader);
+            List<Remote> loaded = loader.load();
             remotes.addAll(loaded);
-            System.out.println("\nПрочитано пультов: " + loaded.size());
             for (Remote r : loaded) {
                 System.out.println(r);
             }
+            System.out.println("\nНайдено объектов: " + loader.getFound()
+                    + " (неизвестного типа пропущено: " + loader.getUnknown() + ")");
+            System.out.println("Создано пультов: " + loaded.size() + ", отвергнуто: " + loader.getSkipped());
+            System.out.println("Свойств прочитано: " + loader.getPropertiesRead()
+                    + ", не найдено: " + loader.getPropertiesMissing()
+                    + ", некорректных: " + loader.getPropertiesInvalid());
         } catch (IOException e) {
             System.out.println("Не получилось прочитать файл: " + e.getMessage());
         }

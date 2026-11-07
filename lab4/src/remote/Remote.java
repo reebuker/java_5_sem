@@ -13,6 +13,13 @@ abstract public class Remote {
     private static final int MIN_START_BATTERY = 80;
     private static final int MAX_START_BATTERY = 100;
 
+    // значения по умолчанию и правила проверки общие для меню и чтения из файла
+    public static final String DEFAULT_MANUFACTURER = "Samsung";
+    public static final String DEFAULT_MODEL = "Basic";
+    public static final String DEFAULT_BATTERY = "AA";
+    public static final int MAX_NAME_LENGTH = 20;
+    private static final String[] BATTERY_TYPES = { "AA", "AAA" };
+
     private static int nextId = 0;
     private final int id;
     private String manufacturer;
@@ -98,6 +105,18 @@ abstract public class Remote {
 
     public void setBatteryType(String batteryType) {
         this.batteryType = batteryType;
+    }
+
+    // AA или AAA в любом регистре (и с кириллической А), иначе null
+    public static String normalizeBattery(String value) {
+        if (value == null)
+            return null;
+        String s = value.trim().toUpperCase().replace('А', 'A'); // А - кириллическая А
+        for (String t : BATTERY_TYPES) {
+            if (t.equals(s))
+                return t;
+        }
+        return null;
     }
 
     // случайное целое от min до max включительно

@@ -13,8 +13,16 @@ import remote.*;
 
 public class DataLoader {
     // Data
-    private static final Pattern CLASS_LINE = Pattern.compile("^класс:\\s*(.+)$");
+    private static final Pattern CLASS_LINE = Pattern.compile("^class:\\s*(.+)$");
     private static final Pattern FIELD_LINE = Pattern.compile("^(\\w+):\\s*(.*)$");
+    private static final Pattern LIST_VALUE = Pattern.compile("^\"[^\"]+\"(\\s*,\\s*\"[^\"]+\")*$");
+    private static final Pattern LIST_ITEM = Pattern.compile("\"([^\"]+)\"");
+
+    // у каждого типа пульта свой ключ для списка
+    private static final Map<String, String> LIST_KEYS = Map.of(
+            "TvRemote", "channels",
+            "StereoRemote", "music",
+            "SmartHomeRemote", "appliances");
 
     private final BufferedReader stream;
 
@@ -59,7 +67,7 @@ public class DataLoader {
 
         String manufacturer = fields.get("manufacturer");
         String model = fields.get("model");
-        String batteryType = fields.get("batteryType");
+        String batteryType = parseBattery(fields.get("batteryType"));
 
         Remote remote = switch (type) {
             case "TvRemote" -> new TvRemote(manufacturer, model, batteryType);
@@ -67,7 +75,34 @@ public class DataLoader {
             case "SmartHomeRemote" -> new SmartHomeRemote(manufacturer, model, batteryType);
             default -> null;
         };
-        if (remote != null)
-            result.add(remote);
+
+        if (remote == null)
+            return;
+
+        List<String> items = parseList(fields.get(LIST_KEYS.get(type)));
+        if (items != null)
+            remote.setChannels(items);
+
+        result.add(remote);
+    }
+
+    // AA или AAA в любом регистре (и с кириллической А), иначе null
+    private static String parseBattery(String value) {
+        if (value == null)
+            return null;
+        String s = value.toUpperCase().replace('\u0410', 'A'); // \u0410 - кириллическая А
+        return (s.equals("AA") || s.equals("AAA")) ? s : null;
+    }
+
+    // "a", "b", "c" -> [a, b, c]; если хоть одно значение без кавычек, весь список
+    // null
+    private static List<String> parseList(String value) {
+        if (value == null || !LIST_VALUE.matcher(value).matches())
+            return null;
+        List<String> items = new ArrayList<>();
+        Matcher m = LIST_ITEM.matcher(value);
+        while (m.find())
+            items.add(m.group(1));
+        return items;
     }
 }

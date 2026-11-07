@@ -45,6 +45,8 @@ abstract public class Remote {
 
     protected abstract void onExtra(int index);
 
+    public abstract void setChannels(List<String> items);
+
     public final boolean turnOn() {
         if (!canUse(false))
             return false;

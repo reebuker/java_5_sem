@@ -1,12 +1,13 @@
 package menu;
 
-import remote.Remote;
-import remote.TvRemote;
-import remote.StereoRemote;
-import remote.SmartHomeRemote;
+import remote.*;
 import dataloader.DataLoader;
 
-// Menu.java
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -16,6 +17,7 @@ public class Menu {
     // Data
     private final List<Remote> remotes = new ArrayList<>();
     private final Scanner in = new Scanner(System.in);
+    private String filename = "data.txt";
 
     // Constants
     private static final int DEFAULT_TYPE = 1;
@@ -34,7 +36,7 @@ public class Menu {
             while (running) {
                 clearScreen();
                 printMenu();
-                int choice = readInt("Выбор: ", 0, 5, null);
+                int choice = readInt("Выбор: ", 0, 6, null);
                 clearScreen();
                 switch (choice) {
                     case 1 -> {
@@ -54,6 +56,10 @@ public class Menu {
                         editRemote();
                         pause();
                     }
+                    case 6 -> {
+                        readFromFile();
+                        pause();
+                    }
                     case 0 -> running = false;
                 }
             }
@@ -68,7 +74,23 @@ public class Menu {
         System.out.println("3 - работа с пультом");
         System.out.println("4 - удалить пульт");
         System.out.println("5 - изменить пульт");
+        System.out.println("6 - прочитать пульты из файла");
         System.out.println("0 - выход");
+    }
+
+    // имя файла спрашиваем каждый раз, по умолчанию прошлое
+    private void readFromFile() {
+        filename = readString("Имя файла", filename);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename, StandardCharsets.UTF_8))) {
+            List<Remote> loaded = new DataLoader(reader).load();
+            remotes.addAll(loaded);
+            System.out.println("\nПрочитано пультов: " + loaded.size());
+            for (Remote r : loaded) {
+                System.out.println(r);
+            }
+        } catch (IOException e) {
+            System.out.println("Не получилось прочитать файл: " + e.getMessage());
+        }
     }
 
     private void addRemote() {

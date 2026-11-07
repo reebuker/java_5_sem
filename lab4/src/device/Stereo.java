@@ -7,7 +7,7 @@ public class Stereo extends Device {
     private static final Stereo INSTANCE = new Stereo();
     private static final int MAX_VOLUME = 100;
 
-    private final List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
+    private List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
             "Лёгкий поп", "Классика");
     private int track = 1;
     private int volume = 20;
@@ -28,6 +28,11 @@ public class Stereo extends Device {
 
     public int getTrack() {
         return track;
+    }
+
+    public void setTracks(List<String> tracks) {
+        this.tracks = List.copyOf(tracks);
+        this.track = 1;
     }
 
     public void setTrack(int number) {

@@ -52,6 +52,11 @@ public class StereoRemote extends Remote {
         }
     }
 
+    @Override
+    public void setChannels(List<String> items) {
+        stereo.setTracks(items);
+    }
+
     private void shuffle() {
         lastShuffle = randomBetween(1, stereo.getTracks().size());
         play(lastShuffle);

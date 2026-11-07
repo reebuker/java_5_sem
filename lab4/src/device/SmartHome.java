@@ -42,6 +42,12 @@ public class SmartHome extends Device {
         return result;
     }
 
+    public void setAppliances(List<String> names) {
+        appliances.clear();
+        for (String name : names)
+            appliances.put(name, false);
+    }
+
     // number от 1, как в меню
     public void toggleByNumber(int number) {
         if (number < 1 || number > appliances.size())

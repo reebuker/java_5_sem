@@ -7,7 +7,7 @@ public class Tv extends Device {
     private static final Tv INSTANCE = new Tv();
     private static final int MAX_VOLUME = 100;
 
-    private final List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
+    private List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
             "Документальный", "Сериалы", "Наука", "Юмор", "Погода");
 
     private int channel = 1;
@@ -29,6 +29,11 @@ public class Tv extends Device {
 
     public int getChannel() {
         return channel;
+    }
+
+    public void setChannels(List<String> channels) {
+        this.channels = List.copyOf(channels);
+        this.channel = 1;
     }
 
     public void setChannel(int number) {

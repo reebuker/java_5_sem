@@ -52,6 +52,11 @@ public class TvRemote extends Remote {
         }
     }
 
+    @Override
+    public void setChannels(List<String> items) {
+        tv.setChannels(items);
+    }
+
     private void switchTo(int number) {
         previousChannel = tv.getChannel();
         tv.setChannel(number);

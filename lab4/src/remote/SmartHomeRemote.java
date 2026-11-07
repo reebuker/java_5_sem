@@ -57,6 +57,11 @@ public class SmartHomeRemote extends Remote {
         }
     }
 
+    @Override
+    public void setChannels(List<String> items) {
+        home.setAppliances(items);
+    }
+
     private void allOff() {
         home.allOff();
         allOffCount++;

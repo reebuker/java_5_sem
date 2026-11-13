@@ -4,9 +4,11 @@ import controller.ArgsParser.Options;
 import model.RemoteRepository;
 import model.remote.Remote;
 import model.storage.CsvStorage;
+import model.storage.LogWriter;
 import view.ConsoleView;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,8 +43,9 @@ public class AppController {
                 yield EXIT_OK;
             }
             case SHOW -> show(options.file());
-            case REPLACE -> replace(options.file(), options.source());
+            case REPLACE -> replace(options.file(), options.replaceWith());
             case WATCH -> watch(options.file(), options.periodSeconds());
+            case EXPORT -> export(options.file(), options.logFile(), options.periodSeconds());
             case MENU -> {
                 new MenuController(remotes, view, options.file()).run();
                 yield EXIT_OK;
@@ -90,6 +93,57 @@ public class AppController {
             // файла может не быть прямо сейчас, это не повод падать: попробуем на следующем тике
             view.showLoadError(filename);
         }
+    }
+
+    // каждые periodSeconds читаем файл с пультами заново и дописываем их состояние в журнал.
+    // Журнал не может быть тем же файлом, что и база: иначе строки журнала попали бы в неё
+    private int export(String filename, String logName, int periodSeconds) {
+        Path source = Path.of(filename);
+        Path log = Path.of(logName);
+        LogWriter logWriter = new LogWriter();
+        try {
+            if (sameFile(source, log)) {
+                view.showLogIsSourceFile(logName);
+                return EXIT_USAGE;
+            }
+            logWriter.prepare(log);
+        } catch (IOException e) {
+            view.showLogError(logName);
+            return EXIT_FAILED;
+        }
+
+        Poller poller = new Poller(periodSeconds, () -> exportTick(source, log, logWriter),
+                view::showWatchStopped);
+        view.showExportStart(filename, logName, periodSeconds);
+        return runPoller(poller);
+    }
+
+    // один тик: свежая база из файла и по строке на каждый пульт в журнал.
+    // Если не вышло прочитать или записать, пишем об этом и ждём следующего тика
+    private void exportTick(Path source, Path log, LogWriter logWriter) {
+        LocalDateTime now = LocalDateTime.now();
+        RemoteRepository current = new RemoteRepository();
+        try {
+            current.replaceAll(new CsvStorage().load(source));
+        } catch (IOException e) {
+            view.showTick(now, source.toString());
+            view.showLoadError(source.toString());
+            return;
+        }
+        try {
+            int rows = logWriter.append(log, now, current.all());
+            view.showExported(now, rows, log.toString());
+        } catch (IOException e) {
+            view.showTick(now, source.toString());
+            view.showLogError(log.toString());
+        }
+    }
+
+    // один и тот же файл: по самому файлу, если он есть, а если нет, то по пути
+    private boolean sameFile(Path a, Path b) throws IOException {
+        if (Files.exists(a) && Files.exists(b))
+            return Files.isSameFile(a, b);
+        return a.toAbsolutePath().normalize().equals(b.toAbsolutePath().normalize());
     }
 
     // запускает задачу в своём потоке и ждёт её, а по Ctrl+C прерывает и дожидается конца

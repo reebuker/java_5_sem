@@ -8,12 +8,12 @@ public final class ArgsParser {
     public static final int MAX_PERIOD = 3600; // секунд
 
     public enum Mode {
-        HELP, SHOW, MENU, REPLACE, WATCH
+        HELP, SHOW, MENU, REPLACE, WATCH, EXPORT
     }
 
-    // что надо сделать, с каким файлом, каким файлом его заменить (только для REPLACE, иначе null)
-    // и как часто повторять в секундах (только для режимов с повтором)
-    public record Options(Mode mode, String file, String source, int periodSeconds) {
+    // что надо сделать и с каким файлом; replaceWith есть только у REPLACE, logFile только у EXPORT
+    // (иначе null); periodSeconds как часто повторять, нужен только режимам с повтором
+    public record Options(Mode mode, String file, String replaceWith, String logFile, int periodSeconds) {
     }
 
     private ArgsParser() {
@@ -21,11 +21,12 @@ public final class ArgsParser {
 
     public static Options parse(String[] args) {
         if (args.length == 0)
-            return new Options(Mode.HELP, DEFAULT_FILE, null, DEFAULT_PERIOD);
+            return new Options(Mode.HELP, DEFAULT_FILE, null, null, DEFAULT_PERIOD);
 
         Mode mode = null;
         String file = null;
-        String source = null;
+        String replaceWith = null;
+        String logFile = null;
         Integer period = null;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -48,7 +49,12 @@ public final class ArgsParser {
                 }
                 case "--replace" -> {
                     mode = chooseMode(mode, Mode.REPLACE);
-                    source = valueAfter(args, i, "имя файла");
+                    replaceWith = valueAfter(args, i, "имя файла");
+                    i++;
+                }
+                case "--export" -> {
+                    mode = chooseMode(mode, Mode.EXPORT);
+                    logFile = valueAfter(args, i, "имя файла");
                     i++;
                 }
                 default -> throw new IllegalArgumentException("Неизвестный ключ: " + arg);
@@ -56,9 +62,9 @@ public final class ArgsParser {
         }
         if (mode == null)
             throw new IllegalArgumentException("Не указан режим работы");
-        if (period != null && mode != Mode.WATCH)
-            throw new IllegalArgumentException("Ключ -p нужен только вместе с --watch");
-        return new Options(mode, file == null ? DEFAULT_FILE : file, source,
+        if (period != null && mode != Mode.WATCH && mode != Mode.EXPORT)
+            throw new IllegalArgumentException("Ключ -p нужен только вместе с --watch или --export");
+        return new Options(mode, file == null ? DEFAULT_FILE : file, replaceWith, logFile,
                 period == null ? DEFAULT_PERIOD : period);
     }
 

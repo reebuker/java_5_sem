@@ -153,12 +153,8 @@ public class CsvStorage {
     private List<String> row(Remote r) {
         RemoteState s = r.state();
         return List.of(r.getClass().getSimpleName(), r.getManufacturer(), r.getModel(), r.getBatteryType(),
-                text(s.batteryLevel()), text(s.on()), text(s.volume()), text(s.position()),
-                text(s.appliances()), text(s.extra1()), text(s.extra2()));
-    }
-
-    private String text(Object value) {
-        return value == null ? "" : value.toString();
+                Csv.text(s.batteryLevel()), Csv.text(s.on()), Csv.text(s.volume()), Csv.text(s.position()),
+                Csv.text(s.appliances()), Csv.text(s.extra1()), Csv.text(s.extra2()));
     }
 
     // столбца нет в строке: считаем пустым

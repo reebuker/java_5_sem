@@ -186,10 +186,12 @@ public class ConsoleView {
         System.out.println("  --replace <файл>  заменить рабочий файл этим (старое содержимое пропадёт)");
         System.out.println("  --watch           показывать пульты снова и снова, каждый раз перечитывая файл");
         System.out.println("                    (останавливается по Ctrl+C)");
+        System.out.println("  --export <журнал> каждый период дописывать в журнал (csv) состояние пультов");
+        System.out.println("                    с временем, журнал не должен быть файлом с пультами");
         System.out.println();
         System.out.println("Остальные ключи:");
         System.out.println("  -f, --file <файл> файл с пультами, по умолчанию " + defaultFile);
-        System.out.println("  -p, --period <с>  как часто повторять в секундах, только для --watch");
+        System.out.println("  -p, --period <с>  как часто повторять в секундах, для --watch и --export");
     }
 
     // ошибки в ключах идут в stderr, чтобы их не путать с обычным выводом
@@ -215,6 +217,23 @@ public class ConsoleView {
     public void showWatchStart(String filename, int periodSeconds) {
         System.out.println("Слежу за файлом " + filename + ", обновляю каждые " + periodSeconds
                 + " с. Остановить: Ctrl+C");
+    }
+
+    public void showExportStart(String filename, String logName, int periodSeconds) {
+        System.out.println("Пишу состояние пультов из " + filename + " в журнал " + logName + " каждые "
+                + periodSeconds + " с. Остановить: Ctrl+C");
+    }
+
+    public void showExported(LocalDateTime time, int rows, String logName) {
+        System.out.println(time.format(TIME) + ": в журнал " + logName + " записано строк: " + rows);
+    }
+
+    public void showLogError(String logName) {
+        System.out.println("Не получилось записать журнал: " + logName);
+    }
+
+    public void showLogIsSourceFile(String logName) {
+        System.out.println("Журнал не может быть файлом с пультами: " + logName);
     }
 
     public void showTick(LocalDateTime time, String filename) {

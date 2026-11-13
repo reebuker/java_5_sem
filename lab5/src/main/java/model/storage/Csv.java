@@ -39,6 +39,11 @@ public class Csv {
         return fields;
     }
 
+    // значение для поля: null это пустое поле
+    public static String text(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
     public static String join(List<String> fields) {
         StringBuilder line = new StringBuilder();
         for (int i = 0; i < fields.size(); i++) {

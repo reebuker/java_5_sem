@@ -1,0 +1,13 @@
+type,manufacturer,model,batteryType,batteryLevel,on,volume,position,appliances,extra1,extra2
+# комментарий, эта строка пропускается
+мусор перед первой строкой данных
+TvRemote,Samsung,glc320,aa,87,true,35,3,,1,0
+TvRemote,ПроизводительСОченьДлиннымНазваниемБолееДвадцатиСимволов,,AAAA,150,maybe,200,0,,-5,x
+StereoRemote,"Sony, Inc",MHC-V13,AAA,64
+StereoRemote,Sony,X1
+Радио,Чужой,Модель,AA,50,true,10,1,,0,0
+tvremote,Тип с маленькой буквы,,,,,,,,,
+SmartHomeRemote,Xiaomi,Hub 2,AA,92,1,,,101,2,-1
+SmartHomeRemote,Xiaomi,Hub 3,AA,92,0,,,1x1,0,0
+,,,
+TvRemote

@@ -73,6 +73,25 @@ public class StereoRemote extends Remote {
     }
 
     @Override
+    public RemoteState state() {
+        return new RemoteState(getBatteryLevel(), isOn(), stereo.getVolume(), stereo.getTrack(), null,
+                playedCount, lastShuffle);
+    }
+
+    @Override
+    public void restore(RemoteState state) {
+        restoreCommon(state);
+        if (state.volume() != null)
+            stereo.setVolume(state.volume());
+        if (state.position() != null)
+            stereo.setTrack(state.position());
+        if (state.extra1() != null)
+            playedCount = state.extra1();
+        if (state.extra2() != null)
+            lastShuffle = state.extra2();
+    }
+
+    @Override
     public String toString() {
         return super.toString() + ", треков включено: " + playedCount
                 + ", последний случайный: " + (lastShuffle == 0 ? "нет" : lastShuffle);

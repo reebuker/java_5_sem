@@ -4,8 +4,6 @@ import java.util.List;
 
 public class Tv extends Device {
     // Data
-    private static final int MAX_VOLUME = 100;
-
     private List<String> channels = List.of("Новости", "Кино", "Спорт", "Музыка", "Мультфильмы",
             "Документальный", "Сериалы", "Наука", "Юмор", "Погода");
 
@@ -33,6 +31,14 @@ public class Tv extends Device {
 
     public void setChannel(int number) {
         channel = Math.max(1, Math.min(channels.size(), number));
+    }
+
+    public int getVolume() {
+        return volume;
+    }
+
+    public void setVolume(int volume) {
+        this.volume = Math.max(0, Math.min(MAX_VOLUME, volume));
     }
 
     public void changeVolume(int delta) {

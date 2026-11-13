@@ -18,6 +18,7 @@ abstract public class Remote {
     public static final String DEFAULT_MODEL = "Basic";
     public static final String DEFAULT_BATTERY = "AA";
     public static final int MAX_NAME_LENGTH = 20;
+    public static final int MAX_BATTERY = 100;
     private static final String[] BATTERY_TYPES = { "AA", "AAA" };
 
     private static final int NO_ID = -1;
@@ -53,6 +54,31 @@ abstract public class Remote {
     protected abstract void onExtra(int index);
 
     public abstract void setChannels(List<String> items);
+
+    // то, что у пульта меняется во время работы, по нему пишется csv
+    public abstract RemoteState state();
+
+    // применяет то, что в состоянии задано, null не меняет
+    public abstract void restore(RemoteState state);
+
+    // общая часть restore: заряд и включено ли устройство
+    protected void restoreCommon(RemoteState state) {
+        if (state.batteryLevel() != null)
+            batteryLevel = Math.max(0, Math.min(MAX_BATTERY, state.batteryLevel()));
+        if (state.on() != null) {
+            for (Device d : devices) {
+                if (state.on())
+                    d.turnOn();
+                else
+                    d.turnOff();
+            }
+        }
+        // разряженный пульт не бывает включённым
+        if (isDead()) {
+            for (Device d : devices)
+                d.turnOff();
+        }
+    }
 
     public final ActionResult turnOn() {
         ActionResult check = check(false);

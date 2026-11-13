@@ -3,12 +3,10 @@ package menu;
 import model.RemoteRepository;
 import model.device.Device;
 import model.remote.*;
-import dataloader.DataLoader;
+import model.storage.CsvStorage;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -18,7 +16,7 @@ public class Menu {
     // Data
     private final RemoteRepository remotes = new RemoteRepository();
     private final Scanner in = new Scanner(System.in);
-    private String filename = "data.txt";
+    private String filename = "data.csv";
 
     // Constants
     private static final int DEFAULT_TYPE = 1;
@@ -37,7 +35,7 @@ public class Menu {
             while (running) {
                 clearScreen();
                 printMenu();
-                int choice = readInt("Выбор: ", 0, 6, null);
+                int choice = readInt("Выбор: ", 0, 7, null);
                 clearScreen();
                 switch (choice) {
                     case 1 -> {
@@ -61,6 +59,10 @@ public class Menu {
                         readFromFile();
                         pause();
                     }
+                    case 7 -> {
+                        saveToFile();
+                        pause();
+                    }
                     case 0 -> running = false;
                 }
             }
@@ -76,15 +78,16 @@ public class Menu {
         System.out.println("4 - удалить пульт");
         System.out.println("5 - изменить пульт");
         System.out.println("6 - прочитать пульты из файла");
+        System.out.println("7 - записать пульты в файл");
         System.out.println("0 - выход");
     }
 
     // имя файла спрашиваем каждый раз, по умолчанию прошлое
     private void readFromFile() {
         filename = readString("Имя файла", filename);
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename, StandardCharsets.UTF_8))) {
-            DataLoader loader = new DataLoader(reader);
-            List<Remote> loaded = loader.load();
+        try {
+            CsvStorage loader = new CsvStorage();
+            List<Remote> loaded = loader.load(Path.of(filename));
             remotes.addAll(loaded);
             for (Remote r : loaded) {
                 System.out.println(r);
@@ -96,6 +99,18 @@ public class Menu {
                     + ", некорректных: " + loader.getPropertiesInvalid());
         } catch (IOException e) {
             System.out.println("Не получилось прочитать файл: " + e.getMessage());
+        }
+    }
+
+    // пишем в тот же файл, имя спрашиваем так же, как при чтении
+    private void saveToFile() {
+        filename = readString("Имя файла", filename);
+        List<Remote> all = remotes.all();
+        try {
+            new CsvStorage().save(all, Path.of(filename));
+            System.out.println("Записано пультов: " + all.size());
+        } catch (IOException e) {
+            System.out.println("Не получилось записать файл: " + filename);
         }
     }
 

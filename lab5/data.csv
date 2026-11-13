@@ -1,0 +1,5 @@
+type,manufacturer,model,batteryType,batteryLevel,on,volume,position,appliances,extra1,extra2
+TvRemote,Samsung,glc320,AA,87,true,35,3,,1,0
+StereoRemote,Sony,MHC-V13,AAA,64,false,20,2,,5,1
+SmartHomeRemote,Xiaomi,Hub 2,AA,92,true,,,101,2,-1
+TvRemote,LG,B7,AA,41,true,60,5,,3,2

@@ -68,6 +68,23 @@ public class SmartHomeRemote extends Remote {
     }
 
     @Override
+    public RemoteState state() {
+        return new RemoteState(getBatteryLevel(), isOn(), null, null, home.getAppliancesState(),
+                allOffCount, lastSceneOn);
+    }
+
+    @Override
+    public void restore(RemoteState state) {
+        restoreCommon(state);
+        if (state.appliances() != null)
+            home.setAppliancesState(state.appliances());
+        if (state.extra1() != null)
+            allOffCount = state.extra1();
+        if (state.extra2() != null)
+            lastSceneOn = state.extra2();
+    }
+
+    @Override
     public String toString() {
         return super.toString() + ", «выключить всё» нажато раз: " + allOffCount
                 + ", после сценария включено: " + (lastSceneOn < 0 ? "нет" : lastSceneOn);

@@ -4,8 +4,6 @@ import java.util.List;
 
 public class Stereo extends Device {
     // Data
-    private static final int MAX_VOLUME = 100;
-
     private List<String> tracks = List.of("Утренний джаз", "Дорожный рок", "Вечерний эмбиент",
             "Лёгкий поп", "Классика");
     private int track = 1;
@@ -32,6 +30,14 @@ public class Stereo extends Device {
 
     public void setTrack(int number) {
         track = Math.max(1, Math.min(tracks.size(), number));
+    }
+
+    public int getVolume() {
+        return volume;
+    }
+
+    public void setVolume(int volume) {
+        this.volume = Math.max(0, Math.min(MAX_VOLUME, volume));
     }
 
     public void changeVolume(int delta) {

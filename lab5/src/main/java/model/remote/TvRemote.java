@@ -75,6 +75,25 @@ public class TvRemote extends Remote {
     }
 
     @Override
+    public RemoteState state() {
+        return new RemoteState(getBatteryLevel(), isOn(), tv.getVolume(), tv.getChannel(), null,
+                previousChannel, lastRandomChannel);
+    }
+
+    @Override
+    public void restore(RemoteState state) {
+        restoreCommon(state);
+        if (state.volume() != null)
+            tv.setVolume(state.volume());
+        if (state.position() != null)
+            tv.setChannel(state.position());
+        if (state.extra1() != null)
+            previousChannel = state.extra1();
+        if (state.extra2() != null)
+            lastRandomChannel = state.extra2();
+    }
+
+    @Override
     public String toString() {
         return super.toString() + ", прошлый канал: " + (previousChannel == 0 ? "нет" : previousChannel)
                 + ", последний случайный: " + (lastRandomChannel == 0 ? "нет" : lastRandomChannel);

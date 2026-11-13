@@ -2,6 +2,8 @@ package model.device;
 
 abstract public class Device {
     // Data
+    public static final int MAX_VOLUME = 100;
+
     private final String name;
     private boolean on = false;
 

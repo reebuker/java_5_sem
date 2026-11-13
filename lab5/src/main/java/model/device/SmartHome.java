@@ -37,6 +37,25 @@ public class SmartHome extends Device {
         return result;
     }
 
+    // состояние приборов по порядку, по символу на прибор: 1 включён, 0 выключен
+    public String getAppliancesState() {
+        StringBuilder state = new StringBuilder();
+        for (boolean on : appliances.values())
+            state.append(on ? '1' : '0');
+        return state.toString();
+    }
+
+    // символов меньше, чем приборов: остальные не меняются, лишние символы игнорируются
+    public void setAppliancesState(String state) {
+        int i = 0;
+        for (Map.Entry<String, Boolean> e : appliances.entrySet()) {
+            if (i >= state.length())
+                break;
+            e.setValue(state.charAt(i) == '1');
+            i++;
+        }
+    }
+
     public void setAppliances(List<String> names) {
         appliances.clear();
         for (String name : names)

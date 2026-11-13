@@ -21,7 +21,10 @@ public class RemoteRepository {
         nextId++;
     }
 
-    public void addAll(Collection<Remote> list) {
+    // замена одной базы другой: старые пульты забываются, нумерация снова с нуля
+    public void replaceAll(Collection<Remote> list) {
+        remotes.clear();
+        nextId = 0;
         for (Remote remote : list)
             add(remote);
     }

@@ -77,7 +77,7 @@ public class Menu {
         System.out.println("3 - работа с пультом");
         System.out.println("4 - удалить пульт");
         System.out.println("5 - изменить пульт");
-        System.out.println("6 - прочитать пульты из файла");
+        System.out.println("6 - заменить пульты пультами из файла");
         System.out.println("7 - записать пульты в файл");
         System.out.println("0 - выход");
     }
@@ -88,7 +88,7 @@ public class Menu {
         try {
             CsvStorage loader = new CsvStorage();
             List<Remote> loaded = loader.load(Path.of(filename));
-            remotes.addAll(loaded);
+            remotes.replaceAll(loaded); // старые пульты пропадают, остаются только из файла
             for (Remote r : loaded) {
                 System.out.println(r);
             }

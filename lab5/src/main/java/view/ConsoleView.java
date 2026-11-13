@@ -11,7 +11,11 @@ import model.remote.SmartHomeRemote;
 import model.remote.StereoRemote;
 import model.remote.TvRemote;
 import model.storage.CsvStorage;
+import model.storage.StorageException;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NoSuchFileException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -52,9 +56,12 @@ public class ConsoleView {
     public String askName(String prompt, String def) {
         while (true) {
             String s = askString(prompt, def);
-            if (s.length() <= Remote.MAX_NAME_LENGTH)
+            if (Remote.isValidName(s))
                 return s;
-            System.out.println("Не длиннее " + Remote.MAX_NAME_LENGTH + " символов");
+            if (s.length() > Remote.MAX_NAME_LENGTH)
+                System.out.println("Не длиннее " + Remote.MAX_NAME_LENGTH + " символов");
+            else
+                System.out.println("Без управляющих символов");
         }
     }
 
@@ -101,9 +108,11 @@ public class ConsoleView {
 
     // ---------- главное меню ----------
 
-    public void showMainMenu(String filename, int count) {
-        System.out.println("Файл с пультами: " + filename + " (пультов: " + count
-                + "), изменения записываются сразу");
+    // autosave false: файл при запуске не прочитался, и сохранять в него нельзя, чтобы его не затереть
+    public void showMainMenu(String filename, int count, boolean autosave) {
+        System.out.println("Файл с пультами: " + filename + " (пультов: " + count + "), "
+                + (autosave ? "изменения записываются сразу"
+                        : "изменения НЕ сохраняются, запишите пульты пунктом 7"));
         System.out.println();
         System.out.println("1 - добавить пульт");
         System.out.println("2 - показать пульты");
@@ -157,32 +166,41 @@ public class ConsoleView {
         showLoadStats(stats);
     }
 
+    public void showBadFilename(String name) {
+        System.out.println("Такое имя файла не подходит: " + shown(name));
+    }
+
     public void showLoadStats(CsvStorage stats) {
         System.out.println("\nНайдено объектов: " + stats.getFound()
                 + " (неизвестного типа пропущено: " + stats.getUnknown() + ")");
         System.out.println("Свойств прочитано: " + stats.getPropertiesRead()
                 + ", не найдено: " + stats.getPropertiesMissing()
                 + ", некорректных: " + stats.getPropertiesInvalid());
+        if (stats.getTooMany() > 0)
+            System.out.println("Лишних строк пропущено, пультов в файле не больше " + CsvStorage.MAX_REMOTES
+                    + ": " + stats.getTooMany());
     }
 
-    public void showLoadError(String filename) {
-        System.out.println("Не получилось прочитать файл: " + filename);
+    public void showLoadError(String filename, IOException e) {
+        System.out.println("Не получилось прочитать файл: " + shown(filename) + reason(e));
     }
 
-    public void showOpenError(String filename) {
-        System.out.println("Не получилось прочитать файл " + filename + ", начинаю с пустого списка");
+    public void showOpenError(String filename, IOException e) {
+        System.out.println("Не получилось прочитать файл " + shown(filename) + reason(e)
+                + ", начинаю с пустого списка, а сохранять в этот файл не буду, чтобы его не затереть");
     }
 
-    public void showAutosaveError(String filename) {
-        System.out.println("Не получилось сохранить файл " + filename + ", изменения остались только в памяти");
+    public void showAutosaveError(String filename, IOException e) {
+        System.out.println("Не получилось сохранить файл " + shown(filename) + reason(e)
+                + ", изменения остались только в памяти");
     }
 
     public void showSaved(int count) {
         System.out.println("Записано пультов: " + count);
     }
 
-    public void showSaveError(String filename) {
-        System.out.println("Не получилось записать файл: " + filename);
+    public void showSaveError(String filename, IOException e) {
+        System.out.println("Не получилось записать файл: " + shown(filename) + reason(e));
     }
 
     // ---------- состояние для режимов с ключами ----------
@@ -240,8 +258,8 @@ public class ConsoleView {
         System.out.println(time.format(TIME) + ": в журнал " + logName + " записано строк: " + rows);
     }
 
-    public void showLogError(String logName) {
-        System.out.println("Не получилось записать журнал: " + logName);
+    public void showLogError(String logName, IOException e) {
+        System.out.println("Не получилось записать журнал: " + shown(logName) + reason(e));
     }
 
     public void showLogIsSourceFile(String logName) {
@@ -268,8 +286,9 @@ public class ConsoleView {
         System.out.println("Это один и тот же файл, менять нечего: " + filename);
     }
 
-    public void showReplaceError(String source, String target) {
-        System.out.println("Не получилось заменить файл " + target + " файлом " + source);
+    public void showReplaceError(String source, String target, IOException e) {
+        System.out.println("Не получилось заменить файл " + shown(target) + " файлом " + shown(source)
+                + reason(e));
     }
 
     // ---------- работа с одним пультом ----------
@@ -330,6 +349,32 @@ public class ConsoleView {
     }
 
     // ---------- как показывать модель ----------
+
+    // причина ошибки с файлом по-русски в скобках, чтобы было понятно, что не так
+    private String reason(IOException e) {
+        String text;
+        if (e instanceof NoSuchFileException)
+            text = "такого файла нет";
+        else if (e instanceof AccessDeniedException)
+            text = "нет доступа";
+        else if (e instanceof StorageException)
+            text = e.getMessage();
+        else
+            text = "ошибка чтения или записи";
+        return " (" + text + ")";
+    }
+
+    // чужой текст (имя файла) для экрана: длинное режем, управляющие символы заменяем
+    private String shown(String text) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length() && i < 80; i++) {
+            char c = text.charAt(i);
+            sb.append(Character.isISOControl(c) ? '?' : c);
+        }
+        if (text.length() > 80)
+            sb.append("…");
+        return sb.toString();
+    }
 
     // строка про пульт: общая часть и то, что есть только у этого вида пульта
     private String describe(Remote r) {

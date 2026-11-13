@@ -70,7 +70,7 @@ public class AppController {
                 view.showSameFile(source);
             return EXIT_OK;
         } catch (IOException e) {
-            view.showReplaceError(source, target);
+            view.showReplaceError(source, target, e);
             return EXIT_FAILED;
         }
     }
@@ -91,7 +91,7 @@ public class AppController {
             view.showStates(current.all());
         } catch (IOException e) {
             // файла может не быть прямо сейчас, это не повод падать: попробуем на следующем тике
-            view.showLoadError(filename);
+            view.showLoadError(filename, e);
         }
     }
 
@@ -108,7 +108,7 @@ public class AppController {
             }
             logWriter.prepare(log);
         } catch (IOException e) {
-            view.showLogError(logName);
+            view.showLogError(logName, e);
             return EXIT_FAILED;
         }
 
@@ -127,7 +127,7 @@ public class AppController {
             current.replaceAll(new CsvStorage().load(source));
         } catch (IOException e) {
             view.showTick(now, source.toString());
-            view.showLoadError(source.toString());
+            view.showLoadError(source.toString(), e);
             return;
         }
         try {
@@ -135,7 +135,7 @@ public class AppController {
             view.showExported(now, rows, log.toString());
         } catch (IOException e) {
             view.showTick(now, source.toString());
-            view.showLogError(log.toString());
+            view.showLogError(log.toString(), e);
         }
     }
 
@@ -178,7 +178,7 @@ public class AppController {
             view.showLoadStats(storage);
             return EXIT_OK;
         } catch (IOException e) {
-            view.showLoadError(e.getMessage());
+            view.showLoadError(filename, e);
             return EXIT_FAILED;
         }
     }

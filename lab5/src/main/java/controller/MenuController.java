@@ -10,6 +10,7 @@ import view.ConsoleView;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -21,6 +22,7 @@ public class MenuController {
     private final ConsoleView view;
     private final RemoteController remoteController;
     private String filename; // файл с пультами: из него читаем при запуске и в него сохраняем после каждого изменения
+    private boolean autosaveOn = true; // выключается, если файл при запуске не прочитался: сохранение его затёрло бы
 
     public MenuController(RemoteRepository remotes, ConsoleView view, String filename) {
         this.remotes = remotes;
@@ -35,7 +37,7 @@ public class MenuController {
             boolean running = true;
             while (running) {
                 view.clear();
-                view.showMainMenu(filename, remotes.all().size());
+                view.showMainMenu(filename, remotes.all().size(), autosaveOn);
                 int choice = view.askMainChoice();
                 view.clear();
                 switch (choice) {
@@ -78,13 +80,20 @@ public class MenuController {
     // при запуске берём пульты из файла, если он есть. Если не открыть так, первое же сохранение
     // затёрло бы то, что в файле лежит. Нет файла: начинаем с пустого списка, файл появится при первом изменении
     private void openFile() {
-        Path file = Path.of(filename);
+        Path file = toPath(filename);
+        if (file == null) { // имя файла нельзя превратить в путь, значит и сохранять некуда
+            autosaveOn = false;
+            view.pause();
+            return;
+        }
         if (Files.notExists(file))
             return;
         try {
             remotes.replaceAll(new CsvStorage().load(file));
         } catch (IOException e) {
-            view.showOpenError(filename);
+            // файл есть, но прочитать его не вышло: если сохранять поверх, мы затрём то, что в нём лежит
+            autosaveOn = false;
+            view.showOpenError(filename, e);
             view.pause();
         }
     }
@@ -92,12 +101,25 @@ public class MenuController {
     // пишет пульты в текущий файл, чтобы другие запуски (--watch, --export) сразу видели изменение.
     // true, если записалось
     private boolean autosave() {
+        if (!autosaveOn)
+            return true; // об этом уже сказано при запуске и написано над меню
         try {
             new CsvStorage().save(remotes.all(), Path.of(filename));
             return true;
         } catch (IOException e) {
-            view.showAutosaveError(filename);
+            view.showAutosaveError(filename, e);
             return false;
+        }
+    }
+
+    // путь из имени, которое ввёл пользователь, или null, если из него нельзя сделать путь
+    // (например, там нулевой символ или буквы, которых нет в кодировке системы)
+    private Path toPath(String name) {
+        try {
+            return Path.of(name);
+        } catch (InvalidPathException e) {
+            view.showBadFilename(name);
+            return null;
         }
     }
 
@@ -170,27 +192,38 @@ public class MenuController {
     }
 
     // имя файла спрашиваем каждый раз, по умолчанию прошлое
+    // основным файлом он становится, только если прочитался
     private void readFromFile() {
-        filename = view.askFilename(filename);
+        String name = view.askFilename(filename);
+        Path file = toPath(name);
+        if (file == null)
+            return;
         try {
             CsvStorage storage = new CsvStorage();
-            List<Remote> loaded = storage.load(Path.of(filename));
+            List<Remote> loaded = storage.load(file);
             remotes.replaceAll(loaded); // старые пульты пропадают, остаются только из файла
+            filename = name;
+            autosaveOn = true;
             view.showLoadReport(loaded, storage);
         } catch (IOException e) {
-            view.showLoadError(e.getMessage());
+            view.showLoadError(name, e);
         }
     }
 
     // пишем в тот же файл, имя спрашиваем так же, как при чтении
     private void saveToFile() {
-        filename = view.askFilename(filename);
+        String name = view.askFilename(filename);
+        Path file = toPath(name);
+        if (file == null)
+            return;
         List<Remote> all = remotes.all();
         try {
-            new CsvStorage().save(all, Path.of(filename));
+            new CsvStorage().save(all, file);
+            filename = name; // дальше сохраняем в него
+            autosaveOn = true;
             view.showSaved(all.size());
         } catch (IOException e) {
-            view.showSaveError(filename);
+            view.showSaveError(name, e);
         }
     }
 }

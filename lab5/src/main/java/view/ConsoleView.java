@@ -12,12 +12,16 @@ import model.remote.StereoRemote;
 import model.remote.TvRemote;
 import model.storage.CsvStorage;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
 // View: всё, что видит и вводит пользователь в консоли. Ничего не решает и ничего
 // не меняет в модели, только показывает её и спрашивает ввод
 public class ConsoleView {
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final Scanner in = new Scanner(System.in);
 
     // ---------- экран ----------
@@ -180,9 +184,12 @@ public class ConsoleView {
         System.out.println("  --show            один раз вывести состояние пультов из файла");
         System.out.println("  --menu            меню, как в ЛР4");
         System.out.println("  --replace <файл>  заменить рабочий файл этим (старое содержимое пропадёт)");
+        System.out.println("  --watch           показывать пульты снова и снова, каждый раз перечитывая файл");
+        System.out.println("                    (останавливается по Ctrl+C)");
         System.out.println();
         System.out.println("Остальные ключи:");
         System.out.println("  -f, --file <файл> файл с пультами, по умолчанию " + defaultFile);
+        System.out.println("  -p, --period <с>  как часто повторять в секундах, только для --watch");
     }
 
     // ошибки в ключах идут в stderr, чтобы их не путать с обычным выводом
@@ -203,6 +210,19 @@ public class ConsoleView {
             for (Device d : r.getDevices())
                 System.out.println("  " + describe(d));
         }
+    }
+
+    public void showWatchStart(String filename, int periodSeconds) {
+        System.out.println("Слежу за файлом " + filename + ", обновляю каждые " + periodSeconds
+                + " с. Остановить: Ctrl+C");
+    }
+
+    public void showTick(LocalDateTime time, String filename) {
+        System.out.println("\n=== " + time.format(TIME) + ", файл " + filename + " ===");
+    }
+
+    public void showWatchStopped() {
+        System.out.println("\nОстановлено");
     }
 
     public void showReplaced(String target, String source, int count) {

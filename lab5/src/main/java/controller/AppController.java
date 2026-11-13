@@ -8,6 +8,7 @@ import view.ConsoleView;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 
 // Controller верхнего уровня: разбирает ключи и запускает нужный режим.
@@ -41,6 +42,7 @@ public class AppController {
             }
             case SHOW -> show(options.file());
             case REPLACE -> replace(options.file(), options.source());
+            case WATCH -> watch(options.file(), options.periodSeconds());
             case MENU -> {
                 new MenuController(remotes, view, options.file()).run();
                 yield EXIT_OK;
@@ -67,6 +69,48 @@ public class AppController {
         } catch (IOException e) {
             view.showReplaceError(source, target);
             return EXIT_FAILED;
+        }
+    }
+
+    // каждые periodSeconds заново читаем файл и показываем пульты, пока не нажмут Ctrl+C
+    private int watch(String filename, int periodSeconds) {
+        Poller poller = new Poller(periodSeconds, () -> watchTick(filename), view::showWatchStopped);
+        view.showWatchStart(filename, periodSeconds);
+        return runPoller(poller);
+    }
+
+    // один тик: файл читается в новую базу, а прошлая забывается
+    private void watchTick(String filename) {
+        view.showTick(LocalDateTime.now(), filename);
+        try {
+            RemoteRepository current = new RemoteRepository();
+            current.replaceAll(new CsvStorage().load(Path.of(filename)));
+            view.showStates(current.all());
+        } catch (IOException e) {
+            // файла может не быть прямо сейчас, это не повод падать: попробуем на следующем тике
+            view.showLoadError(filename);
+        }
+    }
+
+    // запускает задачу в своём потоке и ждёт её, а по Ctrl+C прерывает и дожидается конца
+    private int runPoller(Poller poller) {
+        Thread thread = new Thread(poller, "poller");
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> stop(thread), "stopper"));
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            stop(thread);
+        }
+        return poller.failed() ? EXIT_FAILED : EXIT_OK;
+    }
+
+    private void stop(Thread thread) {
+        thread.interrupt();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

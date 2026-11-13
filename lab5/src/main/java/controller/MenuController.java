@@ -19,11 +19,12 @@ public class MenuController {
     private final RemoteRepository remotes;
     private final ConsoleView view;
     private final RemoteController remoteController;
-    private String filename = "data.csv";
+    private String filename; // какой файл предлагать по умолчанию
 
-    public MenuController(RemoteRepository remotes, ConsoleView view) {
+    public MenuController(RemoteRepository remotes, ConsoleView view, String filename) {
         this.remotes = remotes;
         this.view = view;
+        this.filename = filename;
         this.remoteController = new RemoteController(view);
     }
 

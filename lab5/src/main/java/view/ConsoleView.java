@@ -147,6 +147,10 @@ public class ConsoleView {
 
     public void showLoadReport(List<Remote> loaded, CsvStorage stats) {
         showRemotes(loaded);
+        showLoadStats(stats);
+    }
+
+    public void showLoadStats(CsvStorage stats) {
         System.out.println("\nНайдено объектов: " + stats.getFound()
                 + " (неизвестного типа пропущено: " + stats.getUnknown() + ")");
         System.out.println("Свойств прочитано: " + stats.getPropertiesRead()
@@ -164,6 +168,40 @@ public class ConsoleView {
 
     public void showSaveError(String filename) {
         System.out.println("Не получилось записать файл: " + filename);
+    }
+
+    // ---------- состояние для режимов с ключами ----------
+
+    public void showHelp(String defaultFile) {
+        System.out.println("Использование: java -jar target/main.jar <режим> [-f файл]");
+        System.out.println();
+        System.out.println("Режимы (нужен ровно один):");
+        System.out.println("  --help, -h        эта справка");
+        System.out.println("  --show            один раз вывести состояние пультов из файла");
+        System.out.println("  --menu            меню, как в ЛР4");
+        System.out.println();
+        System.out.println("Остальные ключи:");
+        System.out.println("  -f, --file <файл> файл с пультами, по умолчанию " + defaultFile);
+    }
+
+    // ошибки в ключах идут в stderr, чтобы их не путать с обычным выводом
+    public void showArgsError(String message) {
+        System.err.println(message);
+        System.err.println("Справка: java -jar target/main.jar --help");
+    }
+
+    // по пульту блок: сам пульт, его заряд и состояние устройств
+    public void showStates(List<Remote> remotes) {
+        if (remotes.isEmpty()) {
+            showEmptyList();
+            return;
+        }
+        for (Remote r : remotes) {
+            System.out.println(describe(r));
+            System.out.println("  Заряд пульта: " + r.getBatteryLevel() + "%");
+            for (Device d : r.getDevices())
+                System.out.println("  " + describe(d));
+        }
     }
 
     // ---------- работа с одним пультом ----------

@@ -1,6 +1,6 @@
 package app;
 
-import controller.MenuController;
+import controller.AppController;
 import model.RemoteRepository;
 import view.ConsoleView;
 
@@ -9,6 +9,8 @@ public class Main {
     public static void main(String[] args) {
         RemoteRepository remotes = new RemoteRepository(); // Model
         ConsoleView view = new ConsoleView(); // View
-        new MenuController(remotes, view).run(); // Controller
+        int code = new AppController(remotes, view).run(args); // Controller
+        if (code != 0)
+            System.exit(code);
     }
 }

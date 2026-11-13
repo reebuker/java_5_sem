@@ -40,11 +40,34 @@ public class AppController {
                 yield EXIT_OK;
             }
             case SHOW -> show(options.file());
+            case REPLACE -> replace(options.file(), options.source());
             case MENU -> {
                 new MenuController(remotes, view, options.file()).run();
                 yield EXIT_OK;
             }
         };
+    }
+
+    // рабочий файл target заменяем файлом source. Новый файл сначала проверяем,
+    // и если с ним что-то не так, старый остаётся как был
+    private int replace(String target, String source) {
+        CsvStorage storage = new CsvStorage();
+        try {
+            List<Remote> loaded = storage.load(Path.of(source));
+            if (loaded.isEmpty()) {
+                view.showReplaceRejected(source);
+                view.showLoadStats(storage);
+                return EXIT_FAILED;
+            }
+            if (storage.replaceFile(Path.of(source), Path.of(target)))
+                view.showReplaced(target, source, loaded.size());
+            else
+                view.showSameFile(source);
+            return EXIT_OK;
+        } catch (IOException e) {
+            view.showReplaceError(source, target);
+            return EXIT_FAILED;
+        }
     }
 
     // один раз читаем файл и показываем состояние пультов

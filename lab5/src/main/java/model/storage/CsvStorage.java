@@ -119,13 +119,34 @@ public class CsvStorage {
         Path tmp = Files.createTempFile(file.toAbsolutePath().getParent(), "remotes", ".tmp");
         try {
             Files.write(tmp, lines, StandardCharsets.UTF_8);
-            try {
-                Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
-            }
+            moveOver(tmp, file);
         } finally {
             Files.deleteIfExists(tmp); // после удачной подмены его уже нет
+        }
+    }
+
+    // заменяет target файлом source целиком, как есть: сначала копия рядом с target,
+    // потом атомарная подмена, поэтому читающий видит или старый файл, или новый, но не половину.
+    // false, если source и target это один и тот же файл и менять нечего
+    public boolean replaceFile(Path source, Path target) throws IOException {
+        if (Files.exists(target) && Files.isSameFile(source, target))
+            return false;
+        Path tmp = Files.createTempFile(target.toAbsolutePath().getParent(), "remotes", ".tmp");
+        try {
+            Files.copy(source, tmp, StandardCopyOption.REPLACE_EXISTING);
+            moveOver(tmp, target);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+        return true;
+    }
+
+    // атомарно, а если файловая система так не умеет, то обычным move
+    private void moveOver(Path tmp, Path file) throws IOException {
+        try {
+            Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

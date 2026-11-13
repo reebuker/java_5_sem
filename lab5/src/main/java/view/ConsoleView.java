@@ -179,6 +179,7 @@ public class ConsoleView {
         System.out.println("  --help, -h        эта справка");
         System.out.println("  --show            один раз вывести состояние пультов из файла");
         System.out.println("  --menu            меню, как в ЛР4");
+        System.out.println("  --replace <файл>  заменить рабочий файл этим (старое содержимое пропадёт)");
         System.out.println();
         System.out.println("Остальные ключи:");
         System.out.println("  -f, --file <файл> файл с пультами, по умолчанию " + defaultFile);
@@ -202,6 +203,22 @@ public class ConsoleView {
             for (Device d : r.getDevices())
                 System.out.println("  " + describe(d));
         }
+    }
+
+    public void showReplaced(String target, String source, int count) {
+        System.out.println("Файл " + target + " заменён файлом " + source + ", пультов в нём: " + count);
+    }
+
+    public void showReplaceRejected(String source) {
+        System.out.println("В файле " + source + " нет ни одного пульта, замена отменена");
+    }
+
+    public void showSameFile(String filename) {
+        System.out.println("Это один и тот же файл, менять нечего: " + filename);
+    }
+
+    public void showReplaceError(String source, String target) {
+        System.out.println("Не получилось заменить файл " + target + " файлом " + source);
     }
 
     // ---------- работа с одним пультом ----------

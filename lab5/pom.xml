@@ -15,8 +15,8 @@
     </properties>
 
     <build>
-        <!-- итоговый файл будет target/remotes.jar -->
-        <finalName>remotes</finalName>
+        <!-- итоговый файл будет target/main.jar -->
+        <finalName>main</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

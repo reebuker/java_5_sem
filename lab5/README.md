@@ -8,7 +8,7 @@
 
     cd lab5
     mvn package
-    java -jar target/remotes.jar
+    java -jar target/main.jar
 
 Пока программа работает как lab4, но пульты хранятся в csv: открывается меню,
 пункт 6 читает пульты из data.csv, пункт 7 записывает их в файл.

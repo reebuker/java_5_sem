@@ -1,6 +1,6 @@
 package menu;
 
-import remote.*;
+import model.remote.*;
 import dataloader.DataLoader;
 
 import java.io.BufferedReader;

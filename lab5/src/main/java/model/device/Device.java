@@ -1,4 +1,4 @@
-package device;
+package model.device;
 
 abstract public class Device {
     // Data

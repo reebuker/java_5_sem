@@ -1,6 +1,6 @@
-package remote;
+package model.remote;
 
-import device.Device;
+import model.device.Device;
 
 import java.util.List;
 import java.util.ArrayList;

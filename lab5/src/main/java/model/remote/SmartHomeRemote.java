@@ -1,6 +1,6 @@
-package remote;
+package model.remote;
 
-import device.SmartHome;
+import model.device.SmartHome;
 
 import java.util.List;
 

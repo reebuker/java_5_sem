@@ -1,6 +1,6 @@
-package remote;
+package model.remote;
 
-import device.Tv;
+import model.device.Tv;
 
 import java.util.List;
 

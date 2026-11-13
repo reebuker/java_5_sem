@@ -1,6 +1,6 @@
-package remote;
+package model.remote;
 
-import device.Stereo;
+import model.device.Stereo;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package device;
+package model.device;
 
 import java.util.ArrayList;
 import java.util.Map;

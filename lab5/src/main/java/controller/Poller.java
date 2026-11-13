@@ -7,7 +7,7 @@ public class Poller implements Runnable {
     private final long periodMillis;
     private final Runnable tick; // что делать каждый раз
     private final Runnable onStop; // что сделать перед завершением потока
-    private volatile boolean failed = false; // выставляется в потоке задачи, читается из main
+    private volatile RuntimeException error; // выставляется в потоке задачи, читается из main
 
     public Poller(int periodSeconds, Runnable tick, Runnable onStop) {
         this.periodMillis = periodSeconds * 1000L;
@@ -18,29 +18,29 @@ public class Poller implements Runnable {
     @Override
     public void run() {
         try {
-            long next = System.currentTimeMillis();
+            // nanoTime, а не часы с датой: если время в системе переведут назад, ждать не станем часами
+            long next = System.nanoTime();
             while (!Thread.currentThread().isInterrupted()) {
                 tick.run();
                 // ждём до следующего тика, а не period после конца работы, чтобы время не уплывало
-                next += periodMillis;
-                long wait = next - System.currentTimeMillis();
+                next += periodMillis * 1_000_000L;
+                long wait = (next - System.nanoTime()) / 1_000_000L;
                 if (wait > 0)
-                    Thread.sleep(wait);
+                    Thread.sleep(Math.min(wait, periodMillis));
                 else
-                    next = System.currentTimeMillis(); // работа затянулась, догонять пропущенное не будем
+                    next = System.nanoTime(); // работа затянулась, догонять пропущенное не будем
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // возвращаем флаг, цикл выше уже не продолжится
         } catch (RuntimeException e) {
-            failed = true;
-            throw e; // ошибку в программе скрывать не надо, пусть её напечатает JVM
+            error = e; // main заберёт её после join() и сообщит, а поток закончится как обычно
         } finally {
             onStop.run();
         }
     }
 
-    // true, если задача упала с неожиданной ошибкой
-    public boolean failed() {
-        return failed;
+    // неожиданная ошибка, с которой упала задача, или null, если всё было нормально
+    public RuntimeException error() {
+        return error;
     }
 }

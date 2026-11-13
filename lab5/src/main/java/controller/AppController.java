@@ -14,11 +14,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 // Controller верхнего уровня: разбирает ключи и запускает нужный режим.
-// Возвращает код выхода: 0 всё хорошо, 1 не вышло прочитать файл, 2 неправильные ключи
+// Возвращает код выхода: 0 всё хорошо, 1 не вышло прочитать файл, 2 неправильные ключи,
+// 3 внутренняя ошибка программы
 public class AppController {
     public static final int EXIT_OK = 0;
     public static final int EXIT_FAILED = 1;
     public static final int EXIT_USAGE = 2;
+    public static final int EXIT_INTERNAL = 3;
 
     private final RemoteRepository remotes;
     private final ConsoleView view;
@@ -93,6 +95,14 @@ public class AppController {
             // файла может не быть прямо сейчас, это не повод падать: попробуем на следующем тике
             view.showLoadError(filename, e);
         }
+        stopIfOutputClosed();
+    }
+
+    // если вывод закрыли (например, ... | head), показывать больше некому: просим поток остановиться,
+    // как это делает Ctrl+C
+    private void stopIfOutputClosed() {
+        if (view.outputClosed())
+            Thread.currentThread().interrupt();
     }
 
     // каждые periodSeconds читаем файл с пультами заново и дописываем их состояние в журнал.
@@ -121,6 +131,14 @@ public class AppController {
     // один тик: свежая база из файла и по строке на каждый пульт в журнал.
     // Если не вышло прочитать или записать, пишем об этом и ждём следующего тика
     private void exportTick(Path source, Path log, LogWriter logWriter) {
+        try {
+            exportOnce(source, log, logWriter);
+        } finally {
+            stopIfOutputClosed();
+        }
+    }
+
+    private void exportOnce(Path source, Path log, LogWriter logWriter) {
         LocalDateTime now = LocalDateTime.now();
         RemoteRepository current = new RemoteRepository();
         try {
@@ -156,7 +174,11 @@ public class AppController {
         } catch (InterruptedException e) {
             stop(thread);
         }
-        return poller.failed() ? EXIT_FAILED : EXIT_OK;
+        if (poller.error() != null) {
+            view.showInternalError(poller.error());
+            return EXIT_INTERNAL;
+        }
+        return EXIT_OK;
     }
 
     private void stop(Thread thread) {

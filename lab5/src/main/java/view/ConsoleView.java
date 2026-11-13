@@ -344,6 +344,18 @@ public class ConsoleView {
         System.out.println("Батарейки сели, пульт выключился навсегда");
     }
 
+    // неожиданная ошибка в самой программе: коротко и по-русски, без страшной трассировки
+    public void showInternalError(Throwable e) {
+        System.err.println("Внутренняя ошибка программы: " + e.getClass().getSimpleName()
+                + (e.getMessage() == null ? "" : " (" + shown(e.getMessage()) + ")"));
+        System.err.println("Работа остановлена, сохранённые в файл данные не пострадали");
+    }
+
+    // true, если вывод закрыт (например, программу запустили как ... | head) и печатать некуда
+    public boolean outputClosed() {
+        return System.out.checkError();
+    }
+
     public void showInputEnded() {
         System.out.println("\nВвод закончился, выход");
     }

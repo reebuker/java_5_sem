@@ -181,10 +181,6 @@ abstract public class Remote {
 
     public abstract List<String> getChannels();
 
-    public String getChannelLabel() {
-        return "канал / трек";
-    }
-
     public int getBatteryLevel() {
         return batteryLevel;
     }
@@ -229,12 +225,5 @@ abstract public class Remote {
 
     public ActionResult togglePower() {
         return isOn() ? turnOff() : turnOn();
-    }
-
-    // Переопределяем метод родителя Object аннотацией @Override
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + " #" + id + ": " + manufacturer + " " + model
-                + ", батарейки " + batteryType;
     }
 }

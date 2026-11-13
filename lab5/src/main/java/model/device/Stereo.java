@@ -43,9 +43,4 @@ public class Stereo extends Device {
     public void changeVolume(int delta) {
         volume = Math.max(0, Math.min(MAX_VOLUME, volume + delta));
     }
-
-    @Override
-    public String getStatus() {
-        return "трек " + track + " (" + tracks.get(track - 1) + "), громкость " + volume;
-    }
 }

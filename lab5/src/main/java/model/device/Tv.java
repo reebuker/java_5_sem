@@ -44,9 +44,4 @@ public class Tv extends Device {
     public void changeVolume(int delta) {
         volume = Math.max(0, Math.min(MAX_VOLUME, volume + delta));
     }
-
-    @Override
-    public String getStatus() {
-        return "канал " + channel + " (" + channels.get(channel - 1) + "), громкость " + volume;
-    }
 }

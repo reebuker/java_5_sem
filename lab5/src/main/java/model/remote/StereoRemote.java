@@ -90,10 +90,4 @@ public class StereoRemote extends Remote {
         if (state.extra2() != null)
             lastShuffle = state.extra2();
     }
-
-    @Override
-    public String toString() {
-        return super.toString() + ", треков включено: " + playedCount
-                + ", последний случайный: " + (lastShuffle == 0 ? "нет" : lastShuffle);
-    }
 }

@@ -1,10 +1,14 @@
 package app;
 
-import menu.Menu;
+import controller.MenuController;
+import model.RemoteRepository;
+import view.ConsoleView;
 
-class Main {
+// Здесь только собираем три части MVC вместе: модель, view и controller
+public class Main {
     public static void main(String[] args) {
-        Menu menu = new Menu();
-        menu.run();
+        RemoteRepository remotes = new RemoteRepository(); // Model
+        ConsoleView view = new ConsoleView(); // View
+        new MenuController(remotes, view).run(); // Controller
     }
 }

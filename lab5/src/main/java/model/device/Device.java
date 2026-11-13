@@ -25,14 +25,7 @@ abstract public class Device {
         return on;
     }
 
-    public abstract String getStatus();
-
     public String getName() {
         return name;
-    }
-
-    @Override
-    public String toString() {
-        return name + ": " + (on ? "вкл" : "выкл") + ", " + getStatus();
     }
 }

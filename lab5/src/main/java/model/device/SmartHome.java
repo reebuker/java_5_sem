@@ -28,13 +28,9 @@ public class SmartHome extends Device {
         return true;
     }
 
-    // названия приборов вместе с состоянием, по порядку
-    public List<String> getAppliances() {
-        List<String> result = new ArrayList<>();
-        for (Map.Entry<String, Boolean> e : appliances.entrySet()) {
-            result.add(e.getKey() + " (" + (e.getValue() ? "вкл" : "выкл") + ")");
-        }
-        return result;
+    // прибор -> включён ли, по порядку; копия, чтобы снаружи ничего не менять
+    public Map<String, Boolean> getAppliances() {
+        return new LinkedHashMap<>(appliances);
     }
 
     // состояние приборов по порядку, по символу на прибор: 1 включён, 0 выключен
@@ -84,10 +80,5 @@ public class SmartHome extends Device {
                 on++;
         }
         return on;
-    }
-
-    @Override
-    public String getStatus() {
-        return appliances.toString();
     }
 }

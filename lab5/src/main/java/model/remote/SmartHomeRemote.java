@@ -34,14 +34,10 @@ public class SmartHomeRemote extends Remote {
         home.toggleByNumber(number);
     }
 
+    // названия приборов, их состояние отдаёт state()
     @Override
     public List<String> getChannels() {
-        return home.getAppliances();
-    }
-
-    @Override
-    public String getChannelLabel() {
-        return "прибор";
+        return List.copyOf(home.getAppliances().keySet());
     }
 
     @Override
@@ -82,11 +78,5 @@ public class SmartHomeRemote extends Remote {
             allOffCount = state.extra1();
         if (state.extra2() != null)
             lastSceneOn = state.extra2();
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + ", «выключить всё» нажато раз: " + allOffCount
-                + ", после сценария включено: " + (lastSceneOn < 0 ? "нет" : lastSceneOn);
     }
 }

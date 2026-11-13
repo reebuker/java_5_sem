@@ -1,5 +1,7 @@
 package menu;
 
+import model.RemoteRepository;
+import model.device.Device;
 import model.remote.*;
 import dataloader.DataLoader;
 
@@ -8,14 +10,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Menu {
     // Data
-    private final List<Remote> remotes = new ArrayList<>();
+    private final RemoteRepository remotes = new RemoteRepository();
     private final Scanner in = new Scanner(System.in);
     private String filename = "data.txt";
 
@@ -120,7 +121,7 @@ public class Menu {
             System.out.println("Список пуст");
             return;
         }
-        for (Remote r : remotes) {
+        for (Remote r : remotes.all()) {
             System.out.println(r);
         }
     }
@@ -132,7 +133,7 @@ public class Menu {
             return null;
         }
         showRemotes();
-        Remote r = findRemote(readInt("\nId пульта", 0, Integer.MAX_VALUE, null));
+        Remote r = remotes.get(readInt("\nId пульта", 0, Integer.MAX_VALUE, null));
         if (r == null)
             System.out.println("Пульта с таким id нет");
         return r;
@@ -142,7 +143,7 @@ public class Menu {
         Remote r = pickRemote();
         if (r == null)
             return;
-        remotes.remove(r);
+        remotes.remove(r.getId());
         System.out.println("\nУдалён: " + r);
     }
 
@@ -217,12 +218,25 @@ public class Menu {
         }
     }
 
-    private Remote findRemote(int id) {
-        for (Remote r : remotes) {
-            if (r.getId() == id)
-                return r;
+    // печатает сообщение по результату нажатия, true если кнопку нажали
+    private boolean report(ActionResult result) {
+        switch (result) {
+            case NO_VOLUME -> System.out.println("В умном доме нет громкости");
+            case REMOTE_DEAD -> System.out.println("Пульт разряжен и больше не работает");
+            case REMOTE_OFF -> System.out.println("Пульт выключен, сначала включите");
+            case OK -> {
+            }
         }
-        return null;
+        return result.pressed();
+    }
+
+    private void showBattery(Remote r) {
+        System.out.println("Батарейки " + r.getBatteryType() + ": " + r.getBatteryLevel() + "%");
+    }
+
+    private void showDevices(Remote r) {
+        for (Device d : r.getDevices())
+            System.out.println(d);
     }
 
     private boolean chooseChannel(Remote r) {
@@ -231,12 +245,12 @@ public class Menu {
             System.out.println("Здесь нет каналов");
             return false;
         }
-        if (!r.checkReady())
+        if (!report(r.checkReady()))
             return false;
         for (int i = 0; i < list.size(); i++) {
             System.out.println((i + 1) + " - " + list.get(i));
         }
-        return r.setChannel(readInt("Номер", 1, list.size(), null));
+        return report(r.setChannel(readInt("Номер", 1, list.size(), null)));
     }
 
     private void workWithRemote() {
@@ -252,7 +266,7 @@ public class Menu {
             clearScreen();
             System.out.println(r);
             System.out.println("Заряд пульта: " + r.getBatteryLevel() + "%");
-            r.showDeviceState();
+            showDevices(r);
             System.out.println("\n1 - " + (r.isOn() ? "выключить" : "включить"));
             System.out.println("2 - громкость +" + VOLUME_STEP);
             System.out.println("3 - громкость -" + VOLUME_STEP);
@@ -265,19 +279,23 @@ public class Menu {
 
             // Выбор
             int choice = readInt("Выбор", 0, EXTRA_START - 1 + extras.size(), null);
+            boolean wasDead = r.isDead();
             boolean needPause = false;
             switch (choice) {
-                case 1 -> needPause = !r.togglePower();
-                case 2 -> needPause = !r.changeVolume(VOLUME_STEP);
-                case 3 -> needPause = !r.changeVolume(-VOLUME_STEP);
+                case 1 -> needPause = !report(r.togglePower());
+                case 2 -> needPause = !report(r.changeVolume(VOLUME_STEP));
+                case 3 -> needPause = !report(r.changeVolume(-VOLUME_STEP));
                 case 4 -> needPause = !chooseChannel(r);
                 case 5 -> {
-                    r.showBatteryState();
+                    showBattery(r);
                     needPause = true;
                 }
                 case 0 -> back = true;
-                default -> needPause = !r.runExtra(choice - EXTRA_START);
+                default -> needPause = !report(r.runExtra(choice - EXTRA_START));
             }
+            // пульт сам не печатает, поэтому про то что батарейки сели говорим здесь
+            if (!wasDead && r.isDead())
+                System.out.println("Батарейки сели, пульт выключился навсегда");
             if (needPause || (r.isDead() && !back))
                 pause();
         }

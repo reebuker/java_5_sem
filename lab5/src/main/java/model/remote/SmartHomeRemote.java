@@ -25,8 +25,8 @@ public class SmartHomeRemote extends Remote {
     }
 
     @Override
-    protected void onChangeVolume(int delta) {
-        System.out.println("В умном доме нет громкости");
+    protected boolean onChangeVolume(int delta) {
+        return false; // в умном доме нет громкости
     }
 
     @Override

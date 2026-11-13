@@ -25,8 +25,9 @@ public class StereoRemote extends Remote {
     }
 
     @Override
-    protected void onChangeVolume(int delta) {
+    protected boolean onChangeVolume(int delta) {
         stereo.changeVolume(delta);
+        return true;
     }
 
     @Override

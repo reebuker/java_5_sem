@@ -25,8 +25,9 @@ public class TvRemote extends Remote {
     }
 
     @Override
-    protected void onChangeVolume(int delta) {
+    protected boolean onChangeVolume(int delta) {
         tv.changeVolume(delta);
+        return true;
     }
 
     @Override

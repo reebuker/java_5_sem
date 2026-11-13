@@ -2,14 +2,11 @@ package model.device;
 
 abstract public class Device {
     // Data
-    private static int nextId = 0;
-    private final int id;
     private final String name;
     private boolean on = false;
 
     // Constructors
     protected Device(String name) {
-        this.id = nextId++;
         this.name = name;
     }
 
@@ -28,16 +25,12 @@ abstract public class Device {
 
     public abstract String getStatus();
 
-    public int getId() {
-        return id;
-    }
-
     public String getName() {
         return name;
     }
 
     @Override
     public String toString() {
-        return name + " #" + id + ": " + (on ? "вкл" : "выкл") + ", " + getStatus();
+        return name + ": " + (on ? "вкл" : "выкл") + ", " + getStatus();
     }
 }

@@ -20,8 +20,8 @@ abstract public class Remote {
     public static final int MAX_NAME_LENGTH = 20;
     private static final String[] BATTERY_TYPES = { "AA", "AAA" };
 
-    private static int nextId = 0;
-    private final int id;
+    private static final int NO_ID = -1;
+    private int id = NO_ID; // выдаёт RemoteRepository, когда пульт туда добавляют
     private String manufacturer;
     private String model;
     private String batteryType;
@@ -32,7 +32,6 @@ abstract public class Remote {
 
     // Constructors
     protected Remote(String manufacturer, String model, String batteryType) {
-        this.id = nextId++;
         this.manufacturer = manufacturer;
         this.model = model;
         this.batteryType = batteryType;
@@ -42,7 +41,8 @@ abstract public class Remote {
 
     protected abstract void onTurnOff();
 
-    protected abstract void onChangeVolume(int delta);
+    // false, если у устройства нет громкости
+    protected abstract boolean onChangeVolume(int delta);
 
     protected abstract void onSetChannel(int number);
 
@@ -54,45 +54,50 @@ abstract public class Remote {
 
     public abstract void setChannels(List<String> items);
 
-    public final boolean turnOn() {
-        if (!canUse(false))
-            return false;
+    public final ActionResult turnOn() {
+        ActionResult check = check(false);
+        if (check != ActionResult.OK)
+            return check;
         onTurnOn();
         spendBattery();
-        return true;
+        return ActionResult.OK;
     }
 
-    public final boolean turnOff() {
-        if (!canUse(false))
-            return false;
+    public final ActionResult turnOff() {
+        ActionResult check = check(false);
+        if (check != ActionResult.OK)
+            return check;
         onTurnOff();
         spendBattery();
-        return true;
+        return ActionResult.OK;
     }
 
     // Setters
-    public final boolean changeVolume(int delta) {
-        if (!canUse(true))
-            return false;
-        onChangeVolume(delta);
+    public final ActionResult changeVolume(int delta) {
+        ActionResult check = check(true);
+        if (check != ActionResult.OK)
+            return check;
+        boolean hasVolume = onChangeVolume(delta);
         spendBattery();
-        return true;
+        return hasVolume ? ActionResult.OK : ActionResult.NO_VOLUME;
     }
 
-    public final boolean setChannel(int number) {
-        if (!canUse(true))
-            return false;
+    public final ActionResult setChannel(int number) {
+        ActionResult check = check(true);
+        if (check != ActionResult.OK)
+            return check;
         onSetChannel(number);
         spendBattery();
-        return true;
+        return ActionResult.OK;
     }
 
-    public final boolean runExtra(int index) {
-        if (!canUse(true))
-            return false;
+    public final ActionResult runExtra(int index) {
+        ActionResult check = check(true);
+        if (check != ActionResult.OK)
+            return check;
         onExtra(index);
         spendBattery();
-        return true;
+        return ActionResult.OK;
     }
 
     public void setManufacturer(String manufacturer) {
@@ -105,6 +110,13 @@ abstract public class Remote {
 
     public void setBatteryType(String batteryType) {
         this.batteryType = batteryType;
+    }
+
+    // второй раз id выдать нельзя
+    public void assignId(int id) {
+        if (this.id != NO_ID)
+            throw new IllegalStateException("у пульта уже есть id " + this.id);
+        this.id = id;
     }
 
     // AA или AAA в любом регистре (и с кириллической А), иначе null
@@ -128,21 +140,17 @@ abstract public class Remote {
         return batteryLevel <= 0;
     }
 
-    // можно ли пользоваться прямо сейчас
-    public boolean checkReady() {
-        return canUse(true);
+    // можно ли пользоваться прямо сейчас: OK или причина, почему нельзя
+    public ActionResult checkReady() {
+        return check(true);
     }
 
-    private boolean canUse(boolean needsOn) {
-        if (isDead()) {
-            System.out.println("Пульт разряжен и больше не работает");
-            return false;
-        }
-        if (needsOn && !isOn()) {
-            System.out.println("Пульт выключен, сначала включите");
-            return false;
-        }
-        return true;
+    private ActionResult check(boolean needsOn) {
+        if (isDead())
+            return ActionResult.REMOTE_DEAD;
+        if (needsOn && !isOn())
+            return ActionResult.REMOTE_OFF;
+        return ActionResult.OK;
     }
 
     public abstract List<String> getChannels();
@@ -175,23 +183,14 @@ abstract public class Remote {
         return List.copyOf(devices);
     }
 
+    // когда батарейки садятся, устройства выключаются, а сообщение об этом на вызывающем
     private void spendBattery() {
         batteryLevel -= randomBetween(MIN_DELTA_BATTERY, MAX_DELTA_BATTERY);
         batteryLevel = Math.max(0, batteryLevel);
         if (batteryLevel == 0) {
             for (Device d : devices)
                 d.turnOff();
-            System.out.println("Батарейки сели, пульт выключился навсегда");
         }
-    }
-
-    public void showBatteryState() {
-        System.out.println("Батарейки " + batteryType + ": " + batteryLevel + "%");
-    }
-
-    public void showDeviceState() {
-        for (Device d : devices)
-            System.out.println(d);
     }
 
     public boolean isOn() {
@@ -202,7 +201,7 @@ abstract public class Remote {
         return false;
     }
 
-    public boolean togglePower() {
+    public ActionResult togglePower() {
         return isOn() ? turnOff() : turnOn();
     }
 

@@ -19,6 +19,7 @@ abstract public class Remote {
     public static final String DEFAULT_BATTERY = "AA";
     public static final int MAX_NAME_LENGTH = 20;
     public static final int MAX_BATTERY = 100;
+    public static final int MAX_COUNTER = 1_000_000; // больше счётчики действий не растут
     private static final String[] BATTERY_TYPES = { "AA", "AAA" };
 
     private static final int NO_ID = -1;
@@ -145,6 +146,13 @@ abstract public class Remote {
         this.id = id;
     }
 
+    // подходит ли строка в название или модель: не пустая, не длиннее MAX_NAME_LENGTH и без
+    // управляющих символов (из-за них ломается вывод на экран)
+    public static boolean isValidName(String name) {
+        return name != null && !name.isEmpty() && name.length() <= MAX_NAME_LENGTH
+                && name.chars().noneMatch(Character::isISOControl);
+    }
+
     // AA или AAA в любом регистре (и с кириллической А), иначе null
     public static String normalizeBattery(String value) {
         if (value == null)
@@ -157,9 +165,21 @@ abstract public class Remote {
         return null;
     }
 
-    // случайное целое от min до max включительно
+    // случайное целое от min до max включительно; если max меньше min (например, список каналов пуст), то min
     protected static int randomBetween(int min, int max) {
+        if (max <= min)
+            return min;
         return ThreadLocalRandom.current().nextInt(min, max + 1);
+    }
+
+    // число в пределах от min до max: из файла или из чужого кода может прийти что угодно
+    protected static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    // счётчик плюс один, но не больше MAX_COUNTER, чтобы не переполнился
+    protected static int plusOne(int counter) {
+        return Math.min(MAX_COUNTER, counter + 1);
     }
 
     public boolean isDead() {

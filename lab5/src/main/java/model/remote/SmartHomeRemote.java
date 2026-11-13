@@ -60,7 +60,7 @@ public class SmartHomeRemote extends Remote {
 
     private void allOff() {
         home.allOff();
-        allOffCount++;
+        allOffCount = plusOne(allOffCount);
     }
 
     @Override
@@ -75,8 +75,8 @@ public class SmartHomeRemote extends Remote {
         if (state.appliances() != null)
             home.setAppliancesState(state.appliances());
         if (state.extra1() != null)
-            allOffCount = state.extra1();
+            allOffCount = clamp(state.extra1(), 0, MAX_COUNTER);
         if (state.extra2() != null)
-            lastSceneOn = state.extra2();
+            lastSceneOn = clamp(state.extra2(), -1, MAX_COUNTER);
     }
 }

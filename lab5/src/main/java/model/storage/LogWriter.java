@@ -28,7 +28,7 @@ public class LogWriter {
     // Бросает IOException, если писать нельзя
     public void prepare(Path file) throws IOException {
         if (Files.exists(file) && (!Files.isRegularFile(file) || !Files.isWritable(file)))
-            throw new IOException("в файл нельзя писать: " + file);
+            throw new StorageException("в файл нельзя писать");
         write(file, List.of());
     }
 

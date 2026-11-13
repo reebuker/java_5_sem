@@ -23,7 +23,10 @@ public class Stereo extends Device {
         return track;
     }
 
+    // пустой список не принимаем: без треков играть нечему
     public void setTracks(List<String> tracks) {
+        if (tracks.isEmpty())
+            return;
         this.tracks = List.copyOf(tracks);
         this.track = 1;
     }
@@ -41,6 +44,6 @@ public class Stereo extends Device {
     }
 
     public void changeVolume(int delta) {
-        volume = Math.max(0, Math.min(MAX_VOLUME, volume + delta));
+        setVolume((int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, (long) volume + delta)));
     }
 }

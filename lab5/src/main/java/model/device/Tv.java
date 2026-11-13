@@ -24,7 +24,10 @@ public class Tv extends Device {
         return channel;
     }
 
+    // пустой список не принимаем: без каналов переключать нечего
     public void setChannels(List<String> channels) {
+        if (channels.isEmpty())
+            return;
         this.channels = List.copyOf(channels);
         this.channel = 1;
     }
@@ -42,6 +45,6 @@ public class Tv extends Device {
     }
 
     public void changeVolume(int delta) {
-        volume = Math.max(0, Math.min(MAX_VOLUME, volume + delta));
+        setVolume((int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, (long) volume + delta)));
     }
 }

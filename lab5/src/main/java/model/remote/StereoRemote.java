@@ -65,7 +65,7 @@ public class StereoRemote extends Remote {
 
     private void play(int number) {
         stereo.setTrack(number);
-        playedCount++;
+        playedCount = plusOne(playedCount);
     }
 
     private void nextTrack() {
@@ -86,8 +86,8 @@ public class StereoRemote extends Remote {
         if (state.position() != null)
             stereo.setTrack(state.position());
         if (state.extra1() != null)
-            playedCount = state.extra1();
+            playedCount = clamp(state.extra1(), 0, MAX_COUNTER);
         if (state.extra2() != null)
-            lastShuffle = state.extra2();
+            lastShuffle = clamp(state.extra2(), 0, MAX_COUNTER);
     }
 }

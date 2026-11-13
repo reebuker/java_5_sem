@@ -88,8 +88,8 @@ public class TvRemote extends Remote {
         if (state.position() != null)
             tv.setChannel(state.position());
         if (state.extra1() != null)
-            previousChannel = state.extra1();
+            previousChannel = clamp(state.extra1(), 0, MAX_COUNTER);
         if (state.extra2() != null)
-            lastRandomChannel = state.extra2();
+            lastRandomChannel = clamp(state.extra2(), 0, MAX_COUNTER);
     }
 }

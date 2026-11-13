@@ -9,12 +9,16 @@ import model.remote.TvRemote;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,11 +49,16 @@ public class CsvStorage {
     private static final Set<String> TYPES = Set.of("TvRemote", "StereoRemote", "SmartHomeRemote");
     private static final Pattern APPLIANCES_VALUE = Pattern.compile("[01]+");
     private static final int MAX_POSITION = 1000;
-    private static final int MAX_COUNTER = 1_000_000;
+    private static final int MAX_COUNTER = Remote.MAX_COUNTER;
+
+    // защита от огромных и подложных файлов: больше этого не читаем, чтобы не съесть всю память
+    public static final int MAX_REMOTES = 10_000;
+    private static final int MAX_FILE_BYTES = 8 * 1024 * 1024;
 
     // итоги последнего чтения
     private int found; // строк известных типов, на каждую создаётся пульт
     private int unknown; // строк неизвестных типов, они пропущены
+    private int tooMany; // строк известных типов сверх MAX_REMOTES, они пропущены
     private int propertiesRead; // свойства прочитаны и корректны
     private int propertiesMissing; // свойства нет или оно пустое, оставлено умолчание
     private int propertiesInvalid; // свойство есть, но некорректное, оставлено умолчание
@@ -57,6 +66,10 @@ public class CsvStorage {
     // Getters
     public int getFound() {
         return found;
+    }
+
+    public int getTooMany() {
+        return tooMany;
     }
 
     public int getUnknown() {
@@ -78,13 +91,26 @@ public class CsvStorage {
     // Methods
     // пустые строки и строки с # в начале пропускаются, заголовок необязателен
     public List<Remote> load(Path file) throws IOException {
-        found = unknown = 0;
+        found = unknown = tooMany = 0;
         propertiesRead = propertiesMissing = propertiesInvalid = 0;
 
+        // папку, устройство или канал читать нельзя: канал и вовсе зависнет, пока в него не напишут
+        if (!Files.isRegularFile(file)) {
+            if (Files.notExists(file))
+                throw new NoSuchFileException(file.toString());
+            throw new StorageException("это не обычный файл");
+        }
+        byte[] bytes;
+        try (InputStream in = Files.newInputStream(file)) {
+            bytes = in.readNBytes(MAX_FILE_BYTES + 1);
+        }
+        if (bytes.length > MAX_FILE_BYTES)
+            throw new StorageException("файл больше " + MAX_FILE_BYTES / (1024 * 1024) + " МБ");
+        // new String, а не Files.newBufferedReader: битые байты он заменяет, а не падает
+        String text = new String(bytes, StandardCharsets.UTF_8);
+
         List<Remote> result = new ArrayList<>();
-        // InputStreamReader, а не Files.newBufferedReader: битые байты он заменяет, а не падает
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(Files.newInputStream(file), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
             boolean firstLine = true;
             boolean headerPossible = true;
             String line;
@@ -111,12 +137,13 @@ public class CsvStorage {
     // пишет во временный файл и подменяет целиком, чтобы тот, кто читает файл в это же
     // время, не увидел его недописанным
     public void save(Collection<Remote> remotes, Path file) throws IOException {
+        file = realTarget(file);
         List<String> lines = new ArrayList<>();
         lines.add(Csv.join(HEADER));
         for (Remote r : remotes)
             lines.add(Csv.join(row(r)));
 
-        Path tmp = Files.createTempFile(file.toAbsolutePath().getParent(), "remotes", ".tmp");
+        Path tmp = Files.createTempFile(directoryOf(file), "remotes", ".tmp");
         try {
             Files.write(tmp, lines, StandardCharsets.UTF_8);
             moveOver(tmp, file);
@@ -129,9 +156,10 @@ public class CsvStorage {
     // потом атомарная подмена, поэтому читающий видит или старый файл, или новый, но не половину.
     // false, если source и target это один и тот же файл и менять нечего
     public boolean replaceFile(Path source, Path target) throws IOException {
+        target = realTarget(target);
         if (Files.exists(target) && Files.isSameFile(source, target))
             return false;
-        Path tmp = Files.createTempFile(target.toAbsolutePath().getParent(), "remotes", ".tmp");
+        Path tmp = Files.createTempFile(directoryOf(target), "remotes", ".tmp");
         try {
             Files.copy(source, tmp, StandardCopyOption.REPLACE_EXISTING);
             moveOver(tmp, target);
@@ -141,8 +169,36 @@ public class CsvStorage {
         return true;
     }
 
+    // папка, в которой лежит (или будет лежать) файл; у корня «/» её нет
+    private static Path directoryOf(Path file) throws IOException {
+        Path dir = file.toAbsolutePath().getParent();
+        if (dir == null)
+            throw new StorageException("у такого файла нет папки");
+        return dir;
+    }
+
+    // если file это ссылка на другой файл, менять надо тот файл, а не саму ссылку
+    private static Path realTarget(Path file) throws IOException {
+        return Files.isSymbolicLink(file) && Files.exists(file) ? file.toRealPath() : file;
+    }
+
+    // временный файл создаётся с правами только для владельца; возвращаем прежние права файла
+    // (у нового файла обычные rw-r--r--), иначе после первой же записи другой пользователь
+    // или другая программа файл бы уже не прочитали. Если файловая система прав не знает, пропускаем
+    private void copyPermissions(Path tmp, Path file) {
+        try {
+            Set<PosixFilePermission> permissions = Files.isRegularFile(file)
+                    ? Files.getPosixFilePermissions(file)
+                    : PosixFilePermissions.fromString("rw-r--r--");
+            Files.setPosixFilePermissions(tmp, permissions);
+        } catch (IOException | UnsupportedOperationException | SecurityException e) {
+            // права не поменялись, файл всё равно запишется
+        }
+    }
+
     // атомарно, а если файловая система так не умеет, то обычным move
     private void moveOver(Path tmp, Path file) throws IOException {
+        copyPermissions(tmp, file);
         try {
             Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (AtomicMoveNotSupportedException e) {
@@ -166,6 +222,10 @@ public class CsvStorage {
         String type = get(columns, TYPE);
         if (!TYPES.contains(type)) {
             unknown++;
+            return;
+        }
+        if (result.size() >= MAX_REMOTES) {
+            tooMany++;
             return;
         }
         found++;
@@ -194,13 +254,13 @@ public class CsvStorage {
         result.add(remote);
     }
 
-    // нет, пусто или длиннее допустимого -> умолчание
+    // нет, пусто, длиннее допустимого или с управляющими символами -> умолчание
     private String checkName(String raw, String def) {
         if (raw.isEmpty()) {
             propertiesMissing++;
             return def;
         }
-        if (raw.length() > Remote.MAX_NAME_LENGTH) {
+        if (!Remote.isValidName(raw)) { // слишком длинное или с управляющими символами
             propertiesInvalid++;
             return def;
         }

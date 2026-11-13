@@ -5,10 +5,5 @@ public enum ActionResult {
     OK,
     NO_VOLUME, // кнопку нажали, но у устройства нет громкости
     REMOTE_DEAD, // пульт разряжен, ничего не сделано
-    REMOTE_OFF; // пульт выключен, ничего не сделано
-
-    // true, если кнопку реально нажали (батарейка потрачена)
-    public boolean pressed() {
-        return this == OK || this == NO_VOLUME;
-    }
+    REMOTE_OFF // пульт выключен, ничего не сделано
 }

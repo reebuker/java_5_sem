@@ -54,10 +54,11 @@ public class RemoteController {
         }
     }
 
-    // показывает сообщение по результату нажатия, true если кнопку нажали
+    // показывает сообщение по результату нажатия, true если всё прошло без сообщения.
+    // Иначе нужна пауза, а то экран очистится раньше, чем сообщение успеют прочитать
     private boolean report(ActionResult result) {
         view.showResult(result);
-        return result.pressed();
+        return result == ActionResult.OK;
     }
 
     private boolean chooseChannel(Remote r) {

@@ -116,7 +116,7 @@ public class ConsoleView {
     }
 
     public int askMainChoice() {
-        return askInt("Выбор: ", 0, 7, null);
+        return askInt("Выбор", 0, 7, null);
     }
 
     // ---------- список пультов ----------

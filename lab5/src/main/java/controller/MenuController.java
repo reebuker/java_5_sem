@@ -9,6 +9,7 @@ import model.storage.CsvStorage;
 import view.ConsoleView;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -19,26 +20,28 @@ public class MenuController {
     private final RemoteRepository remotes;
     private final ConsoleView view;
     private final RemoteController remoteController;
-    private String filename; // какой файл предлагать по умолчанию
+    private String filename; // файл с пультами: из него читаем при запуске и в него сохраняем после каждого изменения
 
     public MenuController(RemoteRepository remotes, ConsoleView view, String filename) {
         this.remotes = remotes;
         this.view = view;
         this.filename = filename;
-        this.remoteController = new RemoteController(view);
+        this.remoteController = new RemoteController(view, this::autosave);
     }
 
     public void run() {
         try {
+            openFile();
             boolean running = true;
             while (running) {
                 view.clear();
-                view.showMainMenu();
+                view.showMainMenu(filename, remotes.all().size());
                 int choice = view.askMainChoice();
                 view.clear();
                 switch (choice) {
                     case 1 -> {
                         addRemote();
+                        autosave();
                         view.pause();
                     }
                     case 2 -> {
@@ -47,11 +50,13 @@ public class MenuController {
                     }
                     case 3 -> workWithRemote();
                     case 4 -> {
-                        deleteRemote();
+                        if (deleteRemote())
+                            autosave();
                         view.pause();
                     }
                     case 5 -> {
-                        editRemote();
+                        if (editRemote())
+                            autosave();
                         view.pause();
                     }
                     case 6 -> {
@@ -67,6 +72,32 @@ public class MenuController {
             }
         } catch (NoSuchElementException e) {
             view.showInputEnded();
+        }
+    }
+
+    // при запуске берём пульты из файла, если он есть. Если не открыть так, первое же сохранение
+    // затёрло бы то, что в файле лежит. Нет файла: начинаем с пустого списка, файл появится при первом изменении
+    private void openFile() {
+        Path file = Path.of(filename);
+        if (Files.notExists(file))
+            return;
+        try {
+            remotes.replaceAll(new CsvStorage().load(file));
+        } catch (IOException e) {
+            view.showOpenError(filename);
+            view.pause();
+        }
+    }
+
+    // пишет пульты в текущий файл, чтобы другие запуски (--watch, --export) сразу видели изменение.
+    // true, если записалось
+    private boolean autosave() {
+        try {
+            new CsvStorage().save(remotes.all(), Path.of(filename));
+            return true;
+        } catch (IOException e) {
+            view.showAutosaveError(filename);
+            return false;
         }
     }
 
@@ -114,24 +145,28 @@ public class MenuController {
             remoteController.work(r);
     }
 
-    private void deleteRemote() {
+    // true, если пульт удалён
+    private boolean deleteRemote() {
         Remote r = pickRemote();
         if (r == null)
-            return;
+            return false;
         remotes.remove(r.getId());
         view.showRemoved(r);
+        return true;
     }
 
-    private void editRemote() {
+    // true, если пульт изменён
+    private boolean editRemote() {
         Remote r = pickRemote();
         if (r == null)
-            return;
+            return false;
 
         view.showEditHint();
         r.setManufacturer(view.askName("Производитель", r.getManufacturer()));
         r.setModel(view.askName("Модель", r.getModel()));
         r.setBatteryType(view.askBattery("Тип батареек (AA/AAA)", r.getBatteryType()));
         view.showUpdated(r);
+        return true;
     }
 
     // имя файла спрашиваем каждый раз, по умолчанию прошлое

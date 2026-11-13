@@ -5,6 +5,7 @@ import model.remote.Remote;
 import view.ConsoleView;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 // Controller: работа с одним пультом. Читает выбор из view, нажимает кнопки у
 // пульта из модели и просит view показать, что получилось
@@ -13,9 +14,11 @@ public class RemoteController {
     private static final int EXTRA_START = 6; // с этого номера идут действия конкретного пульта
 
     private final ConsoleView view;
+    private final BooleanSupplier save; // сохраняет базу, true если вышло
 
-    public RemoteController(ConsoleView view) {
+    public RemoteController(ConsoleView view, BooleanSupplier save) {
         this.view = view;
+        this.save = save;
     }
 
     public void work(Remote r) {
@@ -43,7 +46,10 @@ public class RemoteController {
             // пульт сам не печатает, поэтому про то что батарейки сели говорим здесь
             if (!wasDead && r.isDead())
                 view.showBatteryDied();
-            if (needPause || (r.isDead() && !back))
+            // после нажатия кнопки сразу сохраняем, чтобы --watch и --export видели изменение.
+            // Выход назад и показ батареек пульт не меняют
+            boolean saved = (choice == 0 || choice == 5) || save.getAsBoolean();
+            if (needPause || !saved || (r.isDead() && !back))
                 view.pause();
         }
     }

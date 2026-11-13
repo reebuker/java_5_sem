@@ -101,14 +101,17 @@ public class ConsoleView {
 
     // ---------- главное меню ----------
 
-    public void showMainMenu() {
+    public void showMainMenu(String filename, int count) {
+        System.out.println("Файл с пультами: " + filename + " (пультов: " + count
+                + "), изменения записываются сразу");
+        System.out.println();
         System.out.println("1 - добавить пульт");
         System.out.println("2 - показать пульты");
         System.out.println("3 - работа с пультом");
         System.out.println("4 - удалить пульт");
         System.out.println("5 - изменить пульт");
         System.out.println("6 - заменить пульты пультами из файла");
-        System.out.println("7 - записать пульты в файл");
+        System.out.println("7 - записать пульты в другой файл");
         System.out.println("0 - выход");
     }
 
@@ -166,6 +169,14 @@ public class ConsoleView {
         System.out.println("Не получилось прочитать файл: " + filename);
     }
 
+    public void showOpenError(String filename) {
+        System.out.println("Не получилось прочитать файл " + filename + ", начинаю с пустого списка");
+    }
+
+    public void showAutosaveError(String filename) {
+        System.out.println("Не получилось сохранить файл " + filename + ", изменения остались только в памяти");
+    }
+
     public void showSaved(int count) {
         System.out.println("Записано пультов: " + count);
     }
@@ -182,7 +193,8 @@ public class ConsoleView {
         System.out.println("Режимы (нужен ровно один):");
         System.out.println("  --help, -h        эта справка");
         System.out.println("  --show            один раз вывести состояние пультов из файла");
-        System.out.println("  --menu            меню, как в ЛР4");
+        System.out.println("  --menu            меню, как в ЛР4, только файл читается при запуске");
+        System.out.println("                    и изменения сразу сохраняются в него");
         System.out.println("  --replace <файл>  заменить рабочий файл этим (старое содержимое пропадёт)");
         System.out.println("  --watch           показывать пульты снова и снова, каждый раз перечитывая файл");
         System.out.println("                    (останавливается по Ctrl+C)");
